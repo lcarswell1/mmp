@@ -43,14 +43,19 @@ class LeftPanel(wx.Panel):
         old = splitter.GetWindow2()
         if item == self.tree.RootItem:  # Root node.
             if not isinstance(old, RightPanel):
-                splitter.ReplaceWindow(old, splitter.GetParent().right_panel)
+                new = splitter.GetParent().right_panel
             else:
                 return  # Nothing more to do.
         elif isinstance(data, Section):
-            splitter.ReplaceWindow(old, SimpleConfWxPanel(data, splitter))
+            new = SimpleConfWxPanel(data, splitter)
+        else:
+            new = wx.Panel(splitter)
+            wx.MessageBox(repr(data))
+        splitter.ReplaceWindow(old, new)
+        new.Show(True)
         if isinstance(old, RightPanel):
             old.Hide()
         else:
-            old.on_ok(event)
+            if isinstance(old, SimpleConfWxPanel):
+                old.on_ok(event)
             old.Destroy()
-        splitter.GetWindow2().Show(True)

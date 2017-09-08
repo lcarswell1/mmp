@@ -78,6 +78,7 @@ class MainFrame(wx.Frame):
         except Exception as e:
             return self.on_error(e)
         backend.node = self.tree.AppendItem(self.backends_root, backend.name)
+        self.tree.SetItemData(backend.node, backend)
 
     def load_backends(self):
         """Load the back ends."""
