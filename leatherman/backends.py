@@ -20,6 +20,7 @@ class Backend:
     """A backend for playing music."""
 
     frame = attrib()
+    short_name = attrib()
     name = attrib()
     description = attrib()
     loop_func = attrib()
@@ -31,7 +32,7 @@ class Backend:
         if self.config is not None:
             if self.config.title == Section.title:
                 self.config.title = self.name
-            config.backends.add_section(__name__, self.config)
+            config.backends.add_section(self.short_name, self.config)
             self.frame.add_config(self.frame.backends_config_root, self.config)
         if self.loop_func is not None:
             self.thread = Thread(target=self.loop)
@@ -55,7 +56,9 @@ class Backend:
         application."""
         if hasattr(module, 'name'):
             return cls(
-                frame, module.name, getattr(module, 'description', ''),
+                frame, module.__name__, module.name, getattr(
+                    module, 'description', ''
+                ),
                 getattr(module, 'loop_func', None),
                 getattr(module, 'config', None)
             )

@@ -24,6 +24,6 @@ class Config(Section):
         title = 'Backends'
 
 
-config = Config()
+config = Config(load=False)  # Load later.
 
 __all__ = ['config']
