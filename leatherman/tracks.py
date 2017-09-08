@@ -9,6 +9,7 @@ class Track:
 
     artist = attrib()
     album = attrib()
+    number = attrib()
     title = attrib()
     meta = attrib(default=Factory(dict))
 
