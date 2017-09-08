@@ -2,7 +2,6 @@
 
 from sys import version
 import wx
-from jinja2 import Environment
 from ... import app
 
 info_format = """{{ app.name }} V{{ app.version }}
@@ -19,8 +18,6 @@ Backends: {% for backend in frame.backends %}
 None loaded.
 {% endfor %}"""
 
-environment = Environment()
-
 
 class RightPanel(wx.Panel):
     """This panel is shwon when the root of the tree is focused."""
@@ -34,12 +31,13 @@ class RightPanel(wx.Panel):
         s.Add(self.info, 1, wx.GROW)
         self.SetSizerAndFit(s)
         self.Bind(wx.EVT_SHOW, self.on_show)
+        self.on_show(None)
 
     def on_show(self, event=None):
         """Show the panel and populate self.info."""
         if event is not None:
             event.Skip()
-        template = environment.from_string(info_format)
+        template = app.environment.from_string(info_format)
         try:
             value = template.render(
                 app=app, python_version=version,

@@ -38,6 +38,7 @@ class Backend:
             config.backends.add_section(self.short_name, self.config)
             self.frame.add_config(self.frame.backends_config_root, self.config)
         self.panel = self.panel(self, self.frame.splitter)
+        self.panel.Hide()
         if self.loop_func is not None:
             self.thread = Thread(target=self.loop)
             self.thread.start()
