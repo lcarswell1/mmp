@@ -5,7 +5,8 @@ import wx
 import backends
 from .. import app
 from ..backends import Backend
-from .panels import LeftPanel, RightPanel
+from .panels.left_panel import LeftPanel
+from .panels.right_panel import RightPanel
 from ..app import name
 from ..config import config
 
@@ -76,6 +77,7 @@ class MainFrame(wx.Frame):
             logger.info('Created %r.', backend)
             self.backends.append(backend)
         except Exception as e:
+            logger.exception(e)
             return self.on_error(e)
         backend.node = self.tree.AppendItem(self.backends_root, backend.name)
         self.tree.SetItemData(backend.node, backend)

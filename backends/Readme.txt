@@ -13,3 +13,10 @@ An instance of simpleconf.Section which holds the configuration values for this 
 
 on_init
 A method which is called with the instance of Backend created from the module. The backend loading code sets backend in the module to be this instance, so you do not need to save it yourself, but it might be useful to instantiate menus ETC at this point.
+
+BackendPanel
+A subclass of wx.Panel to be instantiated with the backend instance as the first argument, then standard arguments for wx.Panel, giving the splitter frame as a parent and used as the user interface for this backend.
+The instance can be accessed with backend.panel.
+
+on_search
+A method which is called with the text of a search from the default search field of the default backend panel (leatherman.ui.panels.backend_panel.BackendPanel).

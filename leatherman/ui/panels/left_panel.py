@@ -1,9 +1,14 @@
 """Provides the Leftpanel class."""
 
+import logging
 import wx
 from simpleconf import Section
 from simpleconf.dialogs.wx import SimpleConfWxPanel
 from .right_panel import RightPanel
+from .backend_panel import BackendPanel
+from ...backends import Backend
+
+logger = logging.getLogger(__name__)
 
 
 class LeftPanel(wx.Panel):
@@ -48,12 +53,15 @@ class LeftPanel(wx.Panel):
                 return  # Nothing more to do.
         elif isinstance(data, Section):
             new = SimpleConfWxPanel(data, splitter)
+        elif isinstance(data, Backend):
+            new = data.panel
         else:
             new = wx.Panel(splitter)
             wx.MessageBox(repr(data))
+        logger.info('Replacing frame %r with %r.', old, new)
         splitter.ReplaceWindow(old, new)
         new.Show(True)
-        if isinstance(old, RightPanel):
+        if isinstance(old, (RightPanel, BackendPanel)):
             old.Hide()
         else:
             if isinstance(old, SimpleConfWxPanel):

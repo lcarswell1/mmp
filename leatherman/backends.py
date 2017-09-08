@@ -6,6 +6,7 @@ import wx
 from attr import attrs, attrib, Factory
 from simpleconf import Section
 from . import app
+from .ui.panels.backend_panel import BackendPanel
 from .config import config
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,8 @@ class Backend:
     description = attrib()
     loop_func = attrib()
     config = attrib()
+    on_search = attrib()
+    panel = attrib()
     node = attrib(default=Factory(lambda: None), init=False)
 
     def __attrs_post_init__(self):
@@ -34,6 +37,7 @@ class Backend:
                 self.config.title = self.name
             config.backends.add_section(self.short_name, self.config)
             self.frame.add_config(self.frame.backends_config_root, self.config)
+        self.panel = self.panel(self, self.frame.splitter)
         if self.loop_func is not None:
             self.thread = Thread(target=self.loop)
             self.thread.start()
@@ -55,13 +59,19 @@ class Backend:
         will have a frame attribute which is the main frame of the
         application."""
         if hasattr(module, 'name'):
-            return cls(
+            b = cls(
                 frame, module.__name__, module.name, getattr(
                     module, 'description', ''
                 ),
                 getattr(module, 'loop_func', None),
-                getattr(module, 'config', None)
+                getattr(module, 'config', None),
+                getattr(module, 'on_search', frame.on_error),
+                getattr(module, 'BackendPanel', BackendPanel)
             )
+            module.backend = b
+            if hasattr(module, 'on_init'):
+                module.on_init(b)
+            return b
         else:
             raise BackendError(
                 'The backend loaded from %r has no name.' % module
