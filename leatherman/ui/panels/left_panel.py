@@ -1,6 +1,8 @@
 """Provides the Leftpanel class."""
 
 import wx
+from simpleconf import Section
+from simpleconf.dialogs.wx import SimpleConfWxPanel
 from .right_panel import RightPanel
 
 
@@ -39,9 +41,16 @@ class LeftPanel(wx.Panel):
         data = self.tree.GetItemData(item)
         splitter = self.GetParent()
         old = splitter.GetWindow2()
-        if data is None:  # Root node.
+        if item == self.tree.RootItem:  # Root node.
             if not isinstance(old, RightPanel):
-                splitter.ReplaceWindow(old, RightPanel(splitter))
-            splitter.GetWindow2().on_show(event)
+                splitter.ReplaceWindow(old, splitter.GetParent().right_panel)
+            else:
+                return  # Nothing more to do.
+        elif isinstance(data, Section):
+            splitter.ReplaceWindow(old, SimpleConfWxPanel(data, splitter))
+        if isinstance(old, RightPanel):
+            old.Hide()
         else:
-            wx.MessageBox(repr(data))
+            old.on_ok(event)
+            old.Destroy()
+        splitter.GetWindow2().Show(True)

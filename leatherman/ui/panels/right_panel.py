@@ -40,11 +40,11 @@ class RightPanel(wx.Panel):
         if event is not None:
             event.Skip()
         template = environment.from_string(info_format)
-        value = template.render(
-            app=app, python_version=version,
-            frame=self.GetParent().GetParent()
-        )
         try:
+            value = template.render(
+                app=app, python_version=version,
+                frame=self.GetParent().GetParent()
+            )
             self.info.SetValue(value)
         except RuntimeError:
             pass  # Panel no longer exists."""

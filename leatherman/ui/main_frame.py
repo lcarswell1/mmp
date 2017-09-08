@@ -2,11 +2,12 @@
 
 import logging
 import wx
-from import_directory import import_directory
+import backends
 from .. import app
 from ..backends import Backend
 from .panels import LeftPanel, RightPanel
 from ..app import name
+from ..config import config
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class MainFrame(wx.Frame):
         self.SetSizerAndFit(s)
         self.Bind(wx.EVT_SHOW, self.on_show)
         self.Bind(wx.EVT_CLOSE, self.on_close)
-        self.backends = []  # To be populated by self.reload_backends.
+        self.backends = []  # To be populated by self.load_backends.
 
     def on_show(self, event):
         """Populate the tree."""
@@ -36,8 +37,23 @@ class MainFrame(wx.Frame):
         self.tree.SetItemHasChildren(self.root)
         self.backends_root = self.tree.AppendItem(self.root, 'Backends')
         self.tree.SetItemHasChildren(self.backends_root)
-        self.reload_backends()
+        self.config_root = self.add_config(self.root, config)
+        self.load_backends()
         self.tree.ExpandAll()
+        self.tree.Collapse(self.config_root)
+        self.tree.SelectItem(self.root)
+
+    def add_config(self, root, section):
+        """Add an entry to self.tree for section under root."""
+        item = self.tree.AppendItem(root, section.title)
+        if section is config.backends:
+            self.backends_config_root = item
+        self.tree.SetItemData(item, section)
+        if section.sections or section is config.backends:
+            self.tree.SetItemHasChildren(item)
+            for subsection in section.children:
+                self.add_config(item, subsection)
+        return item
 
     def on_close(self, event):
         """Set app.running to false before we close."""
@@ -52,22 +68,21 @@ class MainFrame(wx.Frame):
             style = wx.ICON_EXCLAMATION
         return wx.MessageBox(str(message), title, style=style)
 
-    def load_backend(self, module, reloaded):
-        """Load (or reload) a module and add it to self.backends."""
-        if reloaded:
-            action = 'Reloaded'
-        else:
-            action = 'Loaded'
-        logger.info('%s %r.', action, module)
+    def add_backend(self, module):
+        """Load a module and add it to self.backends."""
+        logger.info('Making a backend from %r.', module)
         try:
-            backend = Backend.from_module(module)
+            backend = Backend.from_module(self, module)
+            logger.info('Created %r.', backend)
             self.backends.append(backend)
         except Exception as e:
             return self.on_error(e)
         backend.node = self.tree.AppendItem(self.backends_root, backend.name)
 
-    def reload_backends(self):
-        """Reload the back ends."""
+    def load_backends(self):
+        """Load the back ends."""
         self.backends.clear()
         self.tree.DeleteChildren(self.backends_root)
-        import_directory(app.backends_dir, func=self.load_backend)
+        for backend in backends.backends:
+            self.add_backend(backend)
+        logger.info('Backends loaded: %d.', len(self.backends))
