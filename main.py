@@ -17,6 +17,7 @@ if __name__ == '__main__':
     app.frame.Show(True)
     app.frame.Maximize()
     config.load()
+    config.interface.track_format.set(config.interface['track_format'])
     app.app.MainLoop()
     if not os.path.isdir(app.data_dir):
         os.makedirs(app.data_dir)

@@ -6,10 +6,26 @@ from simpleconf.validators import Integer
 from . import app
 
 
+class TrackFormatOption(Option):
+    def set(self, value):
+        super(TrackFormatOption, self).set(value)
+        app.frame.track_format_template = app.environment.from_string(value)
+
+
 class Config(Section):
     """Program configuration."""
     filename = os.path.join(app.data_dir, 'config.json')
     title = 'Options'
+
+    class interface(Section):
+        """Change aspects of the interface."""
+
+        title = 'Interface'
+
+        track_format = TrackFormatOption(
+            '{{ artist }} - {{ album }} - {{ number }} - {{ title}}',
+            title='&Result Format'
+        )
 
     class sound(Section):
         title = 'Sound'
