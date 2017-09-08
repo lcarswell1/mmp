@@ -9,3 +9,4 @@ gmusicapi
 requests
 git+https://github.com/chrisnorman7/default_argparse.git
 git+https://github.com/chrisnorman7/lyricscraper.git
+jinja2
