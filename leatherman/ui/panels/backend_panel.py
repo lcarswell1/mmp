@@ -2,6 +2,8 @@
 
 import wx
 from wx.lib.sized_controls import SizedPanel
+from attr import asdict
+from ... import app
 
 
 class BackendPanel(SizedPanel):
@@ -26,3 +28,25 @@ class BackendPanel(SizedPanel):
                 self.search_field.Clear()
         except Exception as e:
             self.backend.frame.on_error(e)
+
+    def add_result(self, track):
+        """Adds a Track instance to self.results."""
+        res = self.results.Append(
+            app.frame.track_format_template.render(**asdict(track))
+        )
+        self.results.SetClientData(res, track)
+        return res
+
+    def add_results(self, results, clear=True):
+        """Add multiple results to self.results."""
+        if clear:
+            self.results.Clear()
+        for result in results:
+            self.add_result(result)
+        self.results.SetFocus()
+        if results:
+            self.results.SetSelection(0)
+
+    def on_select(self, event):
+        import pdb
+        pdb.set_trace()

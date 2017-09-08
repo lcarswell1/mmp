@@ -1,13 +1,67 @@
 """A Google Play Music backend."""
 
+import os
+import os.path
+from datetime import timedelta
 import wx
+from sound_lib.stream import URLStream
+from attr import attrs, attrib, Factory
 from gmusicapi import Mobileclient
 from simpleconf import Section, Option
+from leatherman.tracks import Track
+from leatherman.app import media_dir
+
+data_dir = None
+
+downloading = []
+
 
 name = "Google Play Music"
 api = Mobileclient()
 backend = None
 authenticated = False
+
+
+def on_init(backend):
+    global data_dir
+    data_dir = os.path.join(media_dir, 'Google')
+    if not os.path.isdir(data_dir):
+        os.makedirs(data_dir)
+
+
+def get_id(d):
+    """Get the id from a dictionary d."""
+    return d.get('storeId', d.get('nid', d.get('trackId', d.get('id'))))
+
+
+@attrs
+class GoogleTrack(Track):
+    """A track from Google."""
+    duration = attrib(default=Factory(timedelta))
+    id = attrib(default=Factory(lambda: None))
+
+    def play(self):
+        """Check this track has been downloaded first."""
+        assert self.id is not None
+        s = URLStream(
+            api.get_stream_url(self.id)
+        )
+        s.play()
+        return s
+
+    @classmethod
+    def from_dict(cls, data):
+        """Create a Track instance from a track dictionary from Google."""
+        return cls(
+            data.get('artist', 'Unknown Artist'),
+            data.get('album', 'Unknown Album'),
+            data.get('trackNumber', 0),
+            data.get('title', 'Unknown Title'),
+            duration=timedelta(
+                milliseconds=int(data.get('durationMillis', '0'))
+            ),
+            id=get_id(data)
+        )
 
 
 def try_login():
@@ -50,5 +104,8 @@ def on_search(value):
         return False
     try_login()
     results = api.search(value)
-    backend.frame.on_error(results.keys())
-    return True
+    songs = results['song_hits']
+    tracks = []
+    for data in songs:
+        tracks.append(GoogleTrack.from_dict(data['track']))
+        wx.CallAfter(backend.panel.add_results, tracks)

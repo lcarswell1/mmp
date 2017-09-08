@@ -23,7 +23,8 @@ class Config(Section):
         title = 'Interface'
 
         track_format = TrackFormatOption(
-            '{{ artist }} - {{ album }} - {{ number }} - {{ title}}',
+            '{{ artist }} - {{ album }} - {{ number }} - {{ title}} ({{ '
+            'duration | format_timedelta }}',
             title='&Result Format'
         )
 
