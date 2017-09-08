@@ -12,7 +12,12 @@ Python version: {{ python_version }}
 
 Authors:
 {% for author in app.authors %}{{ author }}{% endfor %}
-"""
+
+Backends: {% for backend in frame.backends %}
+{{ backend.name }}
+{% else %}
+None loaded.
+{% endfor %}"""
 
 environment = Environment()
 
@@ -29,7 +34,6 @@ class RightPanel(wx.Panel):
         s.Add(self.info, 1, wx.GROW)
         self.SetSizerAndFit(s)
         self.Bind(wx.EVT_SHOW, self.on_show)
-        self.on_show()
 
     def on_show(self, event=None):
         """Show the panel and populate self.info."""
@@ -37,7 +41,8 @@ class RightPanel(wx.Panel):
             event.Skip()
         template = environment.from_string(info_format)
         value = template.render(
-            app=app, python_version=version
+            app=app, python_version=version,
+            frame=self.GetParent().GetParent()
         )
         try:
             self.info.SetValue(value)

@@ -2,7 +2,10 @@
 
 import wx
 
+running = True  # Set to False when we close.
 app = wx.App(False)
+
+frame = None  # The main frame.
 
 name = 'Leatherman'
 version = '0.1Pre'
@@ -18,3 +21,4 @@ paths = wx.StandardPaths.Get()
 
 data_dir = paths.GetUserDataDir()
 media_dir = paths.GetUserLocalDataDir()
+backends_dir = 'backends'

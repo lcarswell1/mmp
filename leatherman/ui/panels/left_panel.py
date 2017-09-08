@@ -1,6 +1,7 @@
 """Provides the Leftpanel class."""
 
 import wx
+from .right_panel import RightPanel
 
 
 class LeftPanel(wx.Panel):
@@ -34,4 +35,13 @@ class LeftPanel(wx.Panel):
 
     def on_tree_change(self, event):
         """The tree view has changed selection."""
-        wx.MessageBox('Hello there.')
+        item = event.GetItem()
+        data = self.tree.GetItemData(item)
+        splitter = self.GetParent()
+        old = splitter.GetWindow2()
+        if data is None:  # Root node.
+            if not isinstance(old, RightPanel):
+                splitter.ReplaceWindow(old, RightPanel(splitter))
+            splitter.GetWindow2().on_show(event)
+        else:
+            wx.MessageBox(repr(data))

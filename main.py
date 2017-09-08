@@ -2,7 +2,7 @@
 
 import logging
 from default_argparse import parser
-from leatherman.app import app, name
+from leatherman import app
 from leatherman.ui.main_frame import MainFrame
 
 if __name__ == '__main__':
@@ -10,6 +10,7 @@ if __name__ == '__main__':
     logging.basicConfig(
         level=args.log_level, stream=args.log_file, format=args.log_format
     )
-    frame = MainFrame(None, title=name)
-    frame.Show(True)
-    app.MainLoop()
+    app.frame = MainFrame(None, title=app.name)
+    app.frame.Show(True)
+    app.frame.Maximize()
+    app.app.MainLoop()

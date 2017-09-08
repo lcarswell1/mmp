@@ -4,9 +4,10 @@ flake8
 hg+http://hg.q-continuum.net/platform_utils
 hg+http://hg.q-continuum.net/libloader
 hg+http://hg.q-continuum.net/sound_lib
-git+https://github.com/chrisnorman7/simpleconf.git
 gmusicapi
 requests
+jinja2
 git+https://github.com/chrisnorman7/default_argparse.git
 git+https://github.com/chrisnorman7/lyricscraper.git
-jinja2
+git+https://github.com/chrisnorman7/simpleconf.git
+git+https://github.com/chrisnorman7/import_directory.git
