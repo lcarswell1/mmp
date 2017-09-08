@@ -21,8 +21,8 @@ class BackendPanel(SizedPanel):
     def on_search(self, event):
         """The enter key was pressed in the search field."""
         text = self.search_field.GetValue()
-        self.search_field.Clear()
         try:
-            self.backend.on_search(text)
+            if self.backend.on_search(text):
+                self.search_field.Clear()
         except Exception as e:
             self.backend.frame.on_error(e)

@@ -46,6 +46,9 @@ config = Config()
 
 def on_search(value):
     """Search for the provided value."""
+    if not value:
+        return False
     try_login()
     results = api.search(value)
-    backend.frame.on_error(len(results))
+    backend.frame.on_error(results.keys())
+    return True

@@ -57,7 +57,6 @@ class LeftPanel(wx.Panel):
             new = data.panel
         else:
             new = wx.Panel(splitter)
-            wx.MessageBox(repr(data))
         logger.info('Replacing frame %r with %r.', old, new)
         splitter.ReplaceWindow(old, new)
         new.Show(True)

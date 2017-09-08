@@ -20,3 +20,4 @@ The instance can be accessed with backend.panel.
 
 on_search
 A method which is called with the text of a search from the default search field of the default backend panel (leatherman.ui.panels.backend_panel.BackendPanel).
+If this method returns True it is assumed the search went ahead and the search field is cleared. If not, the search string remains n place.
