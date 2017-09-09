@@ -2,11 +2,9 @@
 
 import wx
 from jinja2 import Environment
-from sound_lib.output import Output
 
 running = True  # Set to False when we close.
 app = wx.App(False)
-output = Output()
 
 frame = None  # The main frame.
 

@@ -4,7 +4,7 @@ import logging
 import wx
 from wx.lib.sized_controls import SizedPanel
 from attr import asdict
-from ... import app
+from ... import app, sound
 from ...hotkeys import Hotkey
 
 logger = logging.getLogger(__name__)
@@ -95,6 +95,6 @@ class BackendPanel(SizedPanel):
         res = self.get_result()
         if res is not None:
             logger.info('Playing %r.', res)
-            res.play()
+            sound.play(res.get_stream())
         else:
             wx.Bell()
