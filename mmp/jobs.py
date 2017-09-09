@@ -40,6 +40,7 @@ def run_jobs():
                     app.frame.on_error,
                     'Error with job %s: %s.' % (job.name, e)
                 )
+                continue
         jobs.append(job)
 
 
