@@ -5,12 +5,16 @@ import os.path
 import logging
 from datetime import timedelta
 import wx
+from wx.lib.sized_controls import SizedPanel
 from sound_lib.stream import URLStream
 from attr import attrs, attrib, Factory
 from gmusicapi import Mobileclient
 from simpleconf import Section, Option
 from mmp.tracks import Track
 from mmp.app import media_dir
+from mmp.jobs import add_job
+from mmp.backends import Backend
+from mmp.ui.panels.backend_panel import BackendPanel
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +27,88 @@ name = "Google Play Music"
 api = Mobileclient()
 backend = None
 authenticated = False
+playlists_backend = None
+library_backend = None
+
+
+class GooglePanel(BackendPanel):
+    def __init__(self, *args, **kwargs):
+        super(GooglePanel, self).__init__(*args, **kwargs)
+        self.search_field.Disable()
+
+    def do_search(self, event):
+        pass  # Do nothing.
+
+
+class PlaylistsPanel(SizedPanel):
+    def __init__(self, backend, *args, **kwargs):
+        self.backend = backend
+        super(PlaylistsPanel, self).__init__(*args, **kwargs)
+        self.SetSizerType('vertical')
+        self.refresh_playlists = wx.Button(self, label='&Refresh &Playlists')
+        self.refresh_library = wx.Button(self, label='Refresh &Library')
+        self.refresh_playlists.Bind(
+            wx.EVT_BUTTON, lambda event: add_job(
+                'Refresh Playlists', build_playlists
+            )
+        )
+        self.refresh_library.Bind(
+            wx.EVT_BUTTON, lambda event: add_job(
+                'Refresh Library', build_library
+            )
+        )
+
+
+class PlaylistPanel(GooglePanel):
+    """A panel for displaying the contents of playlists."""
+    pass
+
+
+class LibraryPanel(GooglePanel):
+    """A panel to display the contents of the library."""
+    pass
+
+
+def build_playlists():
+    """Get playlists from Google and add them to playlists_root."""
+    print('Build playlists.')
+
+
+def build_library():
+    """Get the contents of the user library and show it in the library
+    panel."""
+    print('Build library.')
 
 
 def on_init(backend):
-    global data_dir
+    global data_dir, playlists_backend, library_backend
     data_dir = os.path.join(media_dir, 'Google')
     if not os.path.isdir(data_dir):
         os.makedirs(data_dir)
+    playlists_backend = Backend(
+        backend.frame,  # Frame.
+        backend.short_name + '_playlists',  # Short name.
+        'Google Music Playlists',  # Long name.
+        'Your Google Music playlists.',  # Description.
+        None,  # Loop function.
+        None,  # Configuration.
+        lambda: None,  # Search function.
+        PlaylistsPanel,  # Panel.
+        root=backend.node
+    )
+    library_backend = Backend(
+        backend.frame,  # Frame.
+        backend.short_name + '_library',  # Short name.
+        'Google Music Library',  # Name.
+        'Your Google Music library.',  # Description.
+        None,  # Loop Function.
+        None,  # Configuration.
+        lambda text: None,  # Search function.
+        LibraryPanel,  # Panel.
+        root=backend.node
+    )
+    backend.frame.add_backend(playlists_backend)
+    backend.frame.add_backend(library_backend)
 
 
 def get_id(d):
@@ -80,6 +159,8 @@ def try_login():
             'Login failed. Check your username and password and try again.'
         )
     logger.info('Login successful.')
+    add_job('Populate Google Playlists', build_playlists)
+    add_job('Populate Google Library', build_library)
 
 
 class Config(Section):
