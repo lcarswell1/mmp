@@ -10,3 +10,4 @@ jinja2
 git+https://github.com/chrisnorman7/default_argparse.git
 git+https://github.com/chrisnorman7/lyricscraper.git
 git+https://github.com/chrisnorman7/simpleconf.git
+six
