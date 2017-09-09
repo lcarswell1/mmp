@@ -8,7 +8,7 @@ app = wx.App(False)
 
 frame = None  # The main frame.
 
-name = 'Leatherman'
+name = 'MMP'
 version = '0.1Pre'
 description = 'The multitool of media players.'
 

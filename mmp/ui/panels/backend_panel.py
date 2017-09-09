@@ -1,11 +1,13 @@
 """Provides the BackendPanel class."""
 
 import logging
+from functools import partial
 import wx
 from wx.lib.sized_controls import SizedPanel
 from attr import asdict
 from ... import app, sound
 from ...hotkeys import add_hotkey
+from ...jobs import add_job
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +37,7 @@ class BackendPanel(SizedPanel):
             if self.backend.on_search(text):
                 self.search_field.Clear()
         except Exception as e:
+            logger.exception(e)
             self.backend.frame.on_error(e)
 
     def add_result(self, track):
@@ -43,6 +46,9 @@ class BackendPanel(SizedPanel):
             app.frame.track_format_template.render(**asdict(track))
         )
         self.results.SetClientData(res, track)
+        if not res:
+            self.results.SetFocus()
+            self.results.SetSelection(0)
         return res
 
     def add_results(self, results, clear=True):
@@ -50,10 +56,11 @@ class BackendPanel(SizedPanel):
         if clear:
             self.results.Clear()
         for result in results:
-            self.add_result(result)
-        self.results.SetFocus()
-        if results:
-            self.results.SetSelection(0)
+            add_job(
+                'Add result',
+                partial(wx.CallAfter, self.add_result, result),
+                one_shot=True
+            )
 
     def get_result(self):
         """Get and return the currently-selected result."""

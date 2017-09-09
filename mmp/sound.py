@@ -39,7 +39,8 @@ def play(track):
     global new_stream
     if new_stream is not None:
         played.append(new_stream)
-        new_stream.stream.pause()
+        if new_stream.stream.is_playing:
+            new_stream.stream.pause()
     stream = track.get_stream()
     new_stream = Playing(track, stream)
     new_stream.stream.play()

@@ -15,6 +15,7 @@ class Job:
 
     name = attrib()
     func = attrib()
+    one_shot = attrib()
 
 
 def run_jobs():
@@ -24,7 +25,8 @@ def run_jobs():
         job = jobs.pop(0)
         try:
             job.func()
-            jobs.append(job)
+            if not job.one_shot:
+                jobs.append(job)
         except Exception as e:
             logger.exception(e)
             wx.CallAfter(
@@ -32,8 +34,9 @@ def run_jobs():
             )
 
 
-def add_job(name, func):
-    """Add a job to the jobs queue."""
-    j = Job(name, func)
+def add_job(name, func, one_shot=False):
+    """Add a job to the jobs queue. If one_shot is True the job will only be
+    run once."""
+    j = Job(name, func, one_shot)
     jobs.append(j)
     return j

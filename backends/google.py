@@ -9,8 +9,8 @@ from sound_lib.stream import URLStream
 from attr import attrs, attrib, Factory
 from gmusicapi import Mobileclient
 from simpleconf import Section, Option
-from leatherman.tracks import Track
-from leatherman.app import media_dir
+from mmp.tracks import Track
+from mmp.app import media_dir
 
 logger = logging.getLogger(__name__)
 
