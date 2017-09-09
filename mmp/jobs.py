@@ -32,14 +32,15 @@ def run_jobs():
             try:
                 dont_stop = job.func()
                 job.last_run = time()
-                if not dont_stop:
-                    jobs.append(job)
+                if dont_stop:
+                    continue
             except Exception as e:
                 logger.exception(e)
                 wx.CallAfter(
                     app.frame.on_error,
                     'Error with job %s: %s.' % (job.name, e)
                 )
+        jobs.append(job)
 
 
 def add_job(name, func, run_every=None):

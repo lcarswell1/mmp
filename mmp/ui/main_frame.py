@@ -2,7 +2,9 @@
 
 import logging
 from threading import Thread
+from inspect import isclass
 import wx
+import six
 import backends
 from .. import app
 from ..jobs import run_jobs
@@ -96,7 +98,11 @@ class MainFrame(wx.Frame):
             title = 'Error'
         if style is None:
             style = wx.ICON_EXCLAMATION
-        return wx.MessageBox(str(message), title, style=style)
+        if isclass(message):
+            message = message.__name__
+        elif not isinstance(message, six.string_types):
+            message = str(message)
+        return wx.MessageBox(message, title, style=style)
 
     def backend_from_module(self, module):
         """Load a module and add it to self.backends."""
@@ -117,7 +123,13 @@ class MainFrame(wx.Frame):
         backend.node = self.tree.AppendItem(backend.root, backend.name)
         self.tree.SetItemData(backend.node, backend)
         if hasattr(backend.module, 'on_init'):
-            backend.module.on_init(backend)
+            try:
+                backend.module.on_init(backend)
+            except Exception as e:
+                self.on_error(
+                    f'Error initialising {backend.name}: {e}.'
+                )
+                logger.exception(e)
 
     def load_backends(self):
         """Load the back ends."""
