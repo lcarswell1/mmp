@@ -1,9 +1,11 @@
 """Provides the MainFrame class."""
 
 import logging
+from threading import Thread
 import wx
 import backends
 from .. import app
+from ..jobs import run_jobs
 from ..backends import Backend
 from .panels.left_panel import LeftPanel
 from .panels.right_panel import RightPanel
@@ -31,6 +33,8 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_SHOW, self.on_show)
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.backends = []  # To be populated by self.load_backends.
+        self.jobs_thread = Thread(target=run_jobs)
+        self.jobs_thread.start()
 
     def on_show(self, event):
         """Populate the tree."""
