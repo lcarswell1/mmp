@@ -75,16 +75,14 @@ class BackendPanel(SizedPanel):
         if clear:
             self.results.Clear()
 
-        def f(*args, **kwargs):
+        def f():
             """Add a result."""
-            wx.CallAfter(self.add_result, *args, **kwargs)
-            return True
+            if not results:
+                return True
+            result = results.pop(0)
+            wx.CallAfter(self.add_result, result, backend=backend)
 
-        for result in results:
-            add_job(
-                'Add result %r' % result,
-                partial(f, result, backend=backend)
-            )
+        add_job('Add Results', f)
 
     def get_result(self):
         """Get and return the currently-selected result."""
