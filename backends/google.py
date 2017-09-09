@@ -44,7 +44,7 @@ class GoogleTrack(Track):
         """Check this track has been downloaded first."""
         assert self.id is not None
         s = URLStream(
-            api.get_stream_url(self.id)
+            api.get_stream_url(self.id).encode()
         )
         s.play()
         return s
