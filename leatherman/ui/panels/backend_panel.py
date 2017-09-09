@@ -43,7 +43,7 @@ class BackendPanel(SizedPanel):
     def on_search(self, event):
         """The enter key was pressed in the search field."""
         text = self.search_field.GetValue()
-        logger.info('Search: %s.', text)
+        logger.debug('Search: %s.', text)
         try:
             if self.backend.on_search(text):
                 self.search_field.Clear()
