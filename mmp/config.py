@@ -24,7 +24,7 @@ class Config(Section):
 
         track_format = TrackFormatOption(
             '{{ artist }} - {{ album }} - {{ number }} - {{ title}} ({{ '
-            'duration | format_timedelta }}',
+            'duration | format_timedelta }} *{{ backend.name }}*',
             title='&Result Format'
         )
         last_backend = Option('', title='The last &Backend to be viewed')

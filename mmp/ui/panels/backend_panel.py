@@ -41,7 +41,7 @@ class BackendPanel(SizedPanel):
         def finalise_search():
             """Add the results and clear the text field."""
             self.search_field.Clear()
-            self.add_results(results)
+            self.add_results(results, backend=backend)
 
         if results:
             wx.CallAfter(finalise_search)
@@ -54,11 +54,13 @@ class BackendPanel(SizedPanel):
             partial(self.do_search, text), one_shot=True
         )
 
-    def add_result(self, track):
+    def add_result(self, track, backend=None):
         """Adds a Track instance to self.results."""
+        if backend is None:
+            backend = self.backend
         res = self.results.Append(
             app.frame.track_format_template.render(
-                **asdict(track), backend=self.backend
+                **asdict(track), backend=backend
             )
         )
         self.results.SetClientData(res, track)
@@ -67,14 +69,16 @@ class BackendPanel(SizedPanel):
             self.results.SetSelection(0)
         return res
 
-    def add_results(self, results, clear=True):
+    def add_results(self, results, clear=True, backend=None):
         """Add multiple results to self.results."""
         if clear:
             self.results.Clear()
         for result in results:
             add_job(
-                'Add result',
-                partial(wx.CallAfter, self.add_result, result),
+                'Add result %r' % result,
+                partial(
+                    wx.CallAfter, self.add_result, result, backend=backend
+                ),
                 one_shot=True
             )
 
