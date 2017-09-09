@@ -98,25 +98,30 @@ class MainFrame(wx.Frame):
             style = wx.ICON_EXCLAMATION
         return wx.MessageBox(str(message), title, style=style)
 
-    def add_backend(self, module):
+    def backend_from_module(self, module):
         """Load a module and add it to self.backends."""
         logger.info('Making a backend from %r.', module)
         try:
             backend = Backend.from_module(self, module)
+            backend.module = module
             logger.info('Created %r.', backend)
-            self.backends.append(backend)
         except Exception as e:
             logger.exception(e)
             return self.on_error(e)
+        self.add_backend(backend)
+
+    def add_backend(self, backend):
+        """Add a backend object."""
+        self.backends.append(backend)
         backend.node = self.tree.AppendItem(self.backends_root, backend.name)
         self.tree.SetItemData(backend.node, backend)
-        if hasattr(module, 'on_init'):
-            module.on_init(backend)
+        if hasattr(backend.module, 'on_init'):
+            backend.module.on_init(backend)
 
     def load_backends(self):
         """Load the back ends."""
         self.backends.clear()
         self.tree.DeleteChildren(self.backends_root)
-        for backend in backends.backends:
-            self.add_backend(backend)
+        for module in backends.backends:
+            self.backend_from_module(module)
         logger.info('Backends loaded: %d.', len(self.backends))

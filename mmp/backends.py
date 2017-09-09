@@ -29,6 +29,7 @@ class Backend:
     on_search = attrib()
     panel = attrib()
     node = attrib(default=Factory(lambda: None), init=False)
+    module = attrib(default=Factory(lambda: None), init=False)
 
     def __attrs_post_init__(self):
         """Start loop_func if it's not None."""
