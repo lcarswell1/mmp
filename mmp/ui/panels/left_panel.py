@@ -54,7 +54,7 @@ class LeftPanel(wx.Panel):
 
     def on_play_pause(self, event):
         """Play or pause the current track."""
-        if isinstance(self.FindFocus(), wx.TextCtrl, wx.Button):
+        if isinstance(self.FindFocus(), (wx.TextCtrl, wx.Button)):
             return event.Skip()
         if sound.new_stream is None:
             wx.Bell()

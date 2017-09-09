@@ -45,7 +45,7 @@ class PlaylistsPanel(SizedPanel):
         self.backend = backend
         super(PlaylistsPanel, self).__init__(*args, **kwargs)
         self.SetSizerType('vertical')
-        self.refresh_playlists = wx.Button(self, label='&Refresh &Playlists')
+        self.refresh_playlists = wx.Button(self, label='Refresh &Playlists')
         self.refresh_library = wx.Button(self, label='Refresh &Library')
         self.refresh_playlists.Bind(
             wx.EVT_BUTTON, lambda event: add_job(
@@ -71,13 +71,31 @@ class LibraryPanel(GooglePanel):
 
 def build_playlists():
     """Get playlists from Google and add them to playlists_root."""
+    if not authenticated:
+        try_login()
+        return True
     print('Build playlists.')
+    return True
 
 
 def build_library():
     """Get the contents of the user library and show it in the library
     panel."""
-    print('Build library.')
+    if not authenticated:
+        try_login()
+        return True
+    logger.info('Retrieving library.')
+    l = api.get_all_songs()
+    logger.info('Library tracks: %d.', len(l))
+    tracks = [GoogleTrack.from_dict(x) for x in l]
+
+    def add_tracks():
+        if not tracks:
+            return True  # Stop.
+        track = tracks.pop(0)
+        wx.CallAfter(library_backend.panel.add_result, track)
+
+    add_job('Add library tracks', add_tracks, run_every=0.1)
 
 
 def on_init(backend):
@@ -88,7 +106,7 @@ def on_init(backend):
     playlists_backend = Backend(
         backend.frame,  # Frame.
         backend.short_name + '_playlists',  # Short name.
-        'Google Music Playlists',  # Long name.
+        'Playlists',  # Long name.
         'Your Google Music playlists.',  # Description.
         None,  # Loop function.
         None,  # Configuration.
@@ -99,7 +117,7 @@ def on_init(backend):
     library_backend = Backend(
         backend.frame,  # Frame.
         backend.short_name + '_library',  # Short name.
-        'Google Music Library',  # Name.
+        'Library',  # Name.
         'Your Google Music library.',  # Description.
         None,  # Loop Function.
         None,  # Configuration.

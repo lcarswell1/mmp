@@ -45,13 +45,14 @@ class BackendPanel(SizedPanel):
 
         if results:
             wx.CallAfter(finalise_search)
+        return True
 
     def on_search(self, event):
         """The enter key was pressed in the search field."""
         text = self.search_field.GetValue()
         add_job(
             'Add results from %s' % self.backend.name,
-            partial(self.do_search, text), one_shot=True
+            partial(self.do_search, text)
         )
 
     def add_result(self, track, backend=None):
@@ -73,13 +74,16 @@ class BackendPanel(SizedPanel):
         """Add multiple results to self.results."""
         if clear:
             self.results.Clear()
+
+        def f(*args, **kwargs):
+            """Add a result."""
+            wx.CallAfter(self.add_result, *args, **kwargs)
+            return True
+
         for result in results:
             add_job(
                 'Add result %r' % result,
-                partial(
-                    wx.CallAfter, self.add_result, result, backend=backend
-                ),
-                one_shot=True
+                partial(f, result, backend=backend)
             )
 
     def get_result(self):

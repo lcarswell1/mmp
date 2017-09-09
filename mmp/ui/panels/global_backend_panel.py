@@ -21,5 +21,5 @@ class GlobalBackendPanel(BackendPanel):
         for backend in app.frame.backends:
             add_job(
                 'Add results from %s' % backend.name,
-                partial(self.do_search, text, backend=backend), one_shot=True
+                partial(self.do_search, text, backend=backend)
             )
