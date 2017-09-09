@@ -11,6 +11,7 @@ from .panels.left_panel import LeftPanel
 from .panels.right_panel import RightPanel
 from ..app import name
 from ..config import config
+from ..hotkeys import handle_hotkey, add_hotkey
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,14 @@ class MainFrame(wx.Frame):
         s = wx.BoxSizer(wx.VERTICAL)
         self.splitter = wx.SplitterWindow(self)
         self.left_panel = LeftPanel(self.splitter)
+        self.Bind(wx.EVT_CHAR_HOOK, handle_hotkey)
+        add_hotkey(
+            wx.WXK_LEFT, self.left_panel.on_previous, modifiers=wx.ACCEL_CTRL
+        )
+        add_hotkey(wx.WXK_SPACE, self.left_panel.on_play_pause)
+        add_hotkey(
+            wx.WXK_RIGHT, self.left_panel.on_next, modifiers=wx.ACCEL_CTRL
+        )
         self.tree = self.left_panel.tree  # Shorthand.
         self.right_panel = RightPanel(self.splitter)
         self.splitter.SplitHorizontally(self.left_panel, self.right_panel)

@@ -1,8 +1,11 @@
 """Provides the Hotkey class."""
 
+import logging
 import six
 import wx
 from attr import attrs, attrib
+
+logger = logging.getLogger()
 
 
 @attrs
@@ -23,24 +26,29 @@ class Hotkey:
 hotkeys = {}
 
 
-def add_hotkey(control, modifiers, key, func, id=None):
-    """Add a hotkey to the specified control. You can either specify key as an
-    integer or a string which will be passed through ord. If id is None a new
-    ID will be generated."""
+def handle_hotkey(event):
+    """Handle an incoming hotkey."""
+    l = hotkeys.get((event.GetModifiers(), event.GetKeyCode()))
+    if not l:
+        return event.Skip()
+    for hotkey in l:
+        if hotkey.control in (None, event.EventObject):
+            logger.info('Running %r.', hotkey)
+            hotkey.func(event)
+            if event.Skipped:
+                logger.info('Done.')
+                break  # Stop execution.
+
+
+def add_hotkey(key, func, modifiers=0, control=None, id=None):
+    """Add a hotkey bound to key with optional modifiers. If control is not
+    None the key will only work when that control has focus, otherwise it is
+    global to the application. If id is None a new ID will be generated for
+    you."""
     if id is None:
         id = wx.NewId()
-    control.Bind(wx.EVT_MENU, func, id=id)
     h = Hotkey(modifiers, key, func, id, control)
-    l = hotkeys.get(control, [])
+    key = (h.modifiers, h.key)
+    l = hotkeys.get(key, [])
     l.append(h)
-    hotkeys[control] = l
-    rebuild_accelerator_table(control)
-
-
-def rebuild_accelerator_table(control):
-    """Rebuild the accelerator tables for control from the list of defined
-    hotkeys."""
-    tbl = []
-    for hotkey in hotkeys.get(control, []):
-        tbl.append((hotkey.modifiers, hotkey.key, hotkey.id))
-    control.SetAcceleratorTable(wx.AcceleratorTable(tbl))
+    hotkeys[key] = l

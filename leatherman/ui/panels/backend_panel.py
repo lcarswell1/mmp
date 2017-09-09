@@ -19,12 +19,12 @@ class BackendPanel(SizedPanel):
         super(BackendPanel, self).__init__(*args, **kwargs)
         self.SetSizerType('form')
         self.search_label = wx.StaticText(self, label='&Search')
-        self.search_field = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
-        self.search_field.Bind(wx.EVT_TEXT_ENTER, self.on_search)
+        self.search_field = wx.TextCtrl(self)
+        add_hotkey(wx.WXK_RETURN, self.on_search, control=self.search_field)
         self.results_label = wx.StaticText(self, label='&Results')
         self.results = wx.ListBox(self)
         add_hotkey(
-            self.results, 0, wx.WXK_RETURN, self.on_activate
+            wx.WXK_RETURN, self.on_activate, control=self.results
         )
 
     def on_search(self, event):
@@ -63,8 +63,6 @@ class BackendPanel(SizedPanel):
 
     def on_activate(self, event):
         """An entry in self.results has been clicked."""
-        if not self.results.HasFocus():
-            return event.Skip()
         res = self.get_result()
         if res is not None:
             logger.info('Playing %r.', res)

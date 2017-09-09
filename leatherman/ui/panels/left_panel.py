@@ -47,10 +47,14 @@ class LeftPanel(wx.Panel):
 
     def on_previous(self, event):
         """Play the previous track."""
+        if isinstance(self.FindFocus(), wx.TextCtrl):
+            return event.Skip()
         wx.Bell()
 
     def on_play_pause(self, event):
         """Play or pause the current track."""
+        if isinstance(self.FindFocus(), wx.TextCtrl):
+            return event.Skip()
         if sound.new_stream is None:
             wx.Bell()
         else:
@@ -62,6 +66,8 @@ class LeftPanel(wx.Panel):
 
     def on_next(self, event):
         """Play the next track."""
+        if isinstance(self.FindFocus(), wx.TextCtrl):
+            return event.Skip()
         wx.Bell()
 
     def on_tree_change(self, event):
