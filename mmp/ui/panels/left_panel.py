@@ -5,7 +5,6 @@ import wx
 from simpleconf import Section
 from simpleconf.dialogs.wx import SimpleConfWxPanel
 from .right_panel import RightPanel
-from .backend_panel import BackendPanel
 from .global_backend_panel import GlobalBackendPanel
 from ...backends import Backend
 from ...config import config
@@ -55,7 +54,7 @@ class LeftPanel(wx.Panel):
 
     def on_play_pause(self, event):
         """Play or pause the current track."""
-        if isinstance(self.FindFocus(), wx.TextCtrl):
+        if isinstance(self.FindFocus(), wx.TextCtrl, wx.Button):
             return event.Skip()
         if sound.new_stream is None:
             wx.Bell()
@@ -99,10 +98,9 @@ class LeftPanel(wx.Panel):
         logger.info('Replacing frame %r with %r.', old, new)
         splitter.ReplaceWindow(old, new)
         new.Show(True)
-        if isinstance(old, (RightPanel, BackendPanel)):
+        if isinstance(old, SimpleConfWxPanel):
+            old.on_ok(event)
+            old.Destroy()
+        else:
             logger.info('Hiding panel %r.', old)
             old.Hide()
-        else:
-            if isinstance(old, SimpleConfWxPanel):
-                old.on_ok(event)
-            old.Destroy()
