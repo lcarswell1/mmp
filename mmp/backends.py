@@ -70,8 +70,6 @@ class Backend:
                 getattr(module, 'BackendPanel', BackendPanel)
             )
             module.backend = b
-            if hasattr(module, 'on_init'):
-                module.on_init(b)
             return b
         else:
             raise BackendError(

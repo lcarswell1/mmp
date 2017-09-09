@@ -110,6 +110,8 @@ class MainFrame(wx.Frame):
             return self.on_error(e)
         backend.node = self.tree.AppendItem(self.backends_root, backend.name)
         self.tree.SetItemData(backend.node, backend)
+        if hasattr(module, 'on_init'):
+            module.on_init(backend)
 
     def load_backends(self):
         """Load the back ends."""
