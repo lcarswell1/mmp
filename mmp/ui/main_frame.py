@@ -113,7 +113,8 @@ class MainFrame(wx.Frame):
     def add_backend(self, backend):
         """Add a backend object."""
         self.backends.append(backend)
-        backend.node = self.tree.AppendItem(self.backends_root, backend.name)
+        self.tree.SetItemHasChildren(backend.root)
+        backend.node = self.tree.AppendItem(backend.root, backend.name)
         self.tree.SetItemData(backend.node, backend)
         if hasattr(backend.module, 'on_init'):
             backend.module.on_init(backend)

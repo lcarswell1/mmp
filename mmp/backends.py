@@ -28,6 +28,7 @@ class Backend:
     config = attrib()
     on_search = attrib()
     panel = attrib()
+    root = attrib(default=Factory(lambda: None))
     node = attrib(default=Factory(lambda: None), init=False)
     module = attrib(default=Factory(lambda: None), init=False)
 
@@ -38,6 +39,8 @@ class Backend:
                 self.config.title = self.name
             config.backends.add_section(self.short_name, self.config)
             self.frame.add_config(self.frame.backends_config_root, self.config)
+        if self.root is None:
+            self.root = self.frame.backends_root
         self.panel = self.panel(self, self.frame.splitter)
         self.panel.Hide()
         if self.loop_func is not None:
