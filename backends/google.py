@@ -2,6 +2,7 @@
 
 import os
 import os.path
+import logging
 from datetime import timedelta
 import wx
 from sound_lib.stream import URLStream
@@ -10,6 +11,8 @@ from gmusicapi import Mobileclient
 from simpleconf import Section, Option
 from leatherman.tracks import Track
 from leatherman.app import media_dir
+
+logger = logging.getLogger(__name__)
 
 data_dir = None
 
@@ -65,15 +68,18 @@ class GoogleTrack(Track):
 def try_login():
     global authenticated
     if authenticated:
+        logger.info('Already logged in.')
         return  # Already logged in.
     authenticated = api.login(
         config.login['username'], config.login['password'],
         api.FROM_MAC_ADDRESS
     )
     if not authenticated:
+        logger.info('Failed login.')
         raise RuntimeError(
             'Login failed. Check your username and password and try again.'
         )
+    logger.info('Login successful.')
 
 
 class Config(Section):
@@ -99,11 +105,15 @@ config = Config()
 def on_search(value):
     """Search for the provided value."""
     if not value:
+        logger.info('Not searching with an empty value.')
         return False
     try_login()
     results = api.search(value)
+    for key, value in results.items():
+        logger.info('%s: %d.', key, len(value))
     songs = results['song_hits']
     tracks = []
     for data in songs:
         tracks.append(GoogleTrack.from_dict(data['track']))
-        wx.CallAfter(backend.panel.add_results, tracks)
+    backend.panel.add_results(tracks)
+    return True

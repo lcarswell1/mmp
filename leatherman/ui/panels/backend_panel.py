@@ -95,6 +95,6 @@ class BackendPanel(SizedPanel):
         res = self.get_result()
         if res is not None:
             logger.info('Playing %r.', res)
-            sound.play(res.get_stream())
+            sound.play(res)
         else:
             wx.Bell()

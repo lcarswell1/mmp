@@ -2,7 +2,7 @@
 
 from sys import version
 import wx
-from ... import app
+from ... import app, jobs
 
 info_format = """{{ app.name }} V{{ app.version }}
 {{ app.description }}
@@ -16,6 +16,11 @@ Backends: {% for backend in frame.backends %}
 {{ backend.name }}
 {% else %}
 None loaded.
+{% endfor %}
+Jobs: {% for job in jobs %}
+{{ job.name }}
+{%else %}
+None running.
 {% endfor %}"""
 
 
@@ -41,7 +46,7 @@ class RightPanel(wx.Panel):
         try:
             value = template.render(
                 app=app, python_version=version,
-                frame=self.GetParent().GetParent()
+                frame=self.GetParent().GetParent(), jobs=jobs.jobs
             )
             self.info.SetValue(value)
         except RuntimeError:

@@ -1,11 +1,11 @@
 """Provides the Backend class, as well as the make_backend function."""
 
 import logging
-from threading import Thread
 import wx
 from attr import attrs, attrib, Factory
 from simpleconf import Section
 from . import app
+from .jobs import add_job
 from .ui.panels.backend_panel import BackendPanel
 from .config import config
 
@@ -40,7 +40,7 @@ class Backend:
         self.panel = self.panel(self, self.frame.splitter)
         self.panel.Hide()
         if self.loop_func is not None:
-            self.thread = Thread(target=self.loop)
+            add_job(self.name, self.loop)
             self.thread.start()
 
     def loop(self):
