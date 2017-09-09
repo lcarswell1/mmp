@@ -85,22 +85,22 @@ class LeftPanel(wx.Panel):
         elif isinstance(data, Section):  # Configuration.
             new = SimpleConfWxPanel(data, splitter)
         elif isinstance(data, Backend):  # One of the backends.
-            config.interface['last_backend'] = data.name
+            config.interface['last_backend'] = data.short_name
             new = data.panel
         elif item == app.frame.backends_root:
             config.interface['last_backend'] = ''
             if self.global_backend_panel is None:
                 self.global_backend_panel = GlobalBackendPanel(splitter)
-                logger.info('Created %r.', self.global_backend_panel)
+                logger.debug('Created %r.', self.global_backend_panel)
             new = self.global_backend_panel
         else:
             new = wx.Panel(splitter)
-        logger.info('Replacing frame %r with %r.', old, new)
+        logger.debug('Replacing frame %r with %r.', old, new)
         splitter.ReplaceWindow(old, new)
         new.Show(True)
         if isinstance(old, SimpleConfWxPanel):
             old.on_ok(event)
             old.Destroy()
         else:
-            logger.info('Hiding panel %r.', old)
+            logger.debug('Hiding panel %r.', old)
             old.Hide()

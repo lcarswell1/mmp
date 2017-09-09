@@ -61,7 +61,7 @@ class MainFrame(wx.Frame):
         config.load()
         if config.interface['last_backend']:
             for b in self.backends:
-                if b.name == config.interface['last_backend']:
+                if b.short_name == config.interface['last_backend']:
                     self.tree.SelectItem(b.node)
                     return logger.info('Setting focus to %r.', b)
             else:
