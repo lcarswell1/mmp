@@ -6,9 +6,10 @@ from simpleconf import Section
 from simpleconf.dialogs.wx import SimpleConfWxPanel
 from .right_panel import RightPanel
 from .backend_panel import BackendPanel
+from .global_backend_panel import GlobalBackendPanel
 from ...backends import Backend
 from ...config import config
-from ... import sound
+from ... import sound, app
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ class LeftPanel(wx.Panel):
     def __init__(self, *args, **kwargs):
         """Add controls."""
         super(LeftPanel, self).__init__(*args, **kwargs)
+        self.global_backend_panel = None
         s = wx.BoxSizer(wx.VERTICAL)  # Main sizer.
         self.tree = wx.TreeCtrl(self)
         self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_tree_change)
@@ -81,17 +83,24 @@ class LeftPanel(wx.Panel):
                 new = splitter.GetParent().right_panel
             else:
                 return  # Nothing more to do.
-        elif isinstance(data, Section):
+        elif isinstance(data, Section):  # Configuration.
             new = SimpleConfWxPanel(data, splitter)
-        elif isinstance(data, Backend):
+        elif isinstance(data, Backend):  # One of the backends.
             config.interface['last_backend'] = data.name
             new = data.panel
+        elif item == app.frame.backends_root:
+            config.interface['last_backend'] = ''
+            if self.global_backend_panel is None:
+                self.global_backend_panel = GlobalBackendPanel(splitter)
+                logger.info('Created %r.', self.global_backend_panel)
+            new = self.global_backend_panel
         else:
             new = wx.Panel(splitter)
         logger.info('Replacing frame %r with %r.', old, new)
         splitter.ReplaceWindow(old, new)
         new.Show(True)
         if isinstance(old, (RightPanel, BackendPanel)):
+            logger.info('Hiding panel %r.', old)
             old.Hide()
         else:
             if isinstance(old, SimpleConfWxPanel):

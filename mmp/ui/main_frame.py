@@ -71,7 +71,7 @@ class MainFrame(wx.Frame):
             logger.info(
                 'No last backend set: %r.', config.interface['last_backend']
             )
-        self.tree.SelectItem(self.root)
+        self.tree.SelectItem(self.backends_root)
 
     def add_config(self, root, section):
         """Add an entry to self.tree for section under root."""
