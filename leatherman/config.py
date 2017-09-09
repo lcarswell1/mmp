@@ -27,6 +27,7 @@ class Config(Section):
             'duration | format_timedelta }}',
             title='&Result Format'
         )
+        last_backend = Option('', title='The last &Backend to be viewed')
 
     class sound(Section):
         title = 'Sound'

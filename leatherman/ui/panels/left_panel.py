@@ -7,6 +7,7 @@ from simpleconf.dialogs.wx import SimpleConfWxPanel
 from .right_panel import RightPanel
 from .backend_panel import BackendPanel
 from ...backends import Backend
+from ...config import config
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,7 @@ class LeftPanel(wx.Panel):
         elif isinstance(data, Section):
             new = SimpleConfWxPanel(data, splitter)
         elif isinstance(data, Backend):
+            config.interface['last_backend'] = data.name
             new = data.panel
         else:
             new = wx.Panel(splitter)
