@@ -8,6 +8,7 @@ from .right_panel import RightPanel
 from .backend_panel import BackendPanel
 from ...backends import Backend
 from ...config import config
+from ... import sound
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,11 @@ class LeftPanel(wx.Panel):
         s.Add(self.tree, 1, wx.GROW)
         bs = wx.BoxSizer(wx.HORIZONTAL)  # Button sizer.
         self.previous_button = wx.Button(self, label='&Previous')
+        self.previous_button.Bind(wx.EVT_BUTTON, self.on_previous)
         self.play_pause_button = wx.Button(self, label='&Play')
+        self.play_pause_button.Bind(wx.EVT_BUTTON, self.on_play_pause)
         self.next_button = wx.Button(self, label='&Next')
+        self.next_button.Bind(wx.EVT_BUTTON, self.on_next)
         bs.AddMany(
             (
                 (self.previous_button, 0, wx.GROW),
@@ -40,6 +44,25 @@ class LeftPanel(wx.Panel):
         ss.Add(self.status, 1, wx.GROW)
         s.Add(ss, 0, wx.GROW)
         self.SetSizerAndFit(s)
+
+    def on_previous(self, event):
+        """Play the previous track."""
+        wx.Bell()
+
+    def on_play_pause(self, event):
+        """Play or pause the current track."""
+        if sound.new_stream is None:
+            wx.Bell()
+        else:
+            stream = sound.new_stream.stream
+            if stream.is_paused:
+                stream.play()
+            else:
+                stream.pause()
+
+    def on_next(self, event):
+        """Play the next track."""
+        wx.Bell()
 
     def on_tree_change(self, event):
         """The tree view has changed selection."""
