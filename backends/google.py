@@ -106,7 +106,6 @@ def on_search(value):
     """Search for the provided value."""
     if not value:
         logger.info('Not searching with an empty value.')
-        return False
     try_login()
     results = api.search(value)
     for key, value in results.items():
@@ -115,5 +114,4 @@ def on_search(value):
     tracks = []
     for data in songs:
         tracks.append(GoogleTrack.from_dict(data['track']))
-    backend.panel.add_results(tracks)
-    return True
+    return tracks

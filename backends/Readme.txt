@@ -20,4 +20,4 @@ The instance can be accessed with backend.panel.
 
 on_search
 A method which is called with the text of a search from the default search field of the default backend panel (leatherman.ui.panels.backend_panel.BackendPanel).
-If this method returns True it is assumed the search went ahead and the search field is cleared. If not, the search string remains n place.
+This method should return a list of Track instances which can be loaded into the results view. It will be called as a job (in a separate thread), so no attempt should be made to make this method non-blocking. Also, be aware of any thread-safety concerns, particularly when interacting with wx.

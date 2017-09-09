@@ -29,21 +29,34 @@ class BackendPanel(SizedPanel):
             wx.WXK_RETURN, self.on_activate, control=self.results
         )
 
+    def do_search(self, text):
+        """This method will be called as a job to gather the results from
+        self.backend.on_search and pass them to self.add_results."""
+        results = self.backend.on_search(text)
+
+        def finalise_search():
+            """Add the results and clear the text field."""
+            self.search_field.Clear()
+            self.add_results(results)
+
+        if results:
+            wx.CallAfter(finalise_search)
+
     def on_search(self, event):
         """The enter key was pressed in the search field."""
         text = self.search_field.GetValue()
         logger.debug('Search: %s.', text)
-        try:
-            if self.backend.on_search(text):
-                self.search_field.Clear()
-        except Exception as e:
-            logger.exception(e)
-            self.backend.frame.on_error(e)
+        add_job(
+            'Add results from %s' % self.backend.name,
+            partial(self.do_search, text), one_shot=True
+        )
 
     def add_result(self, track):
         """Adds a Track instance to self.results."""
         res = self.results.Append(
-            app.frame.track_format_template.render(**asdict(track))
+            app.frame.track_format_template.render(
+                **asdict(track), backend=self.backend
+            )
         )
         self.results.SetClientData(res, track)
         if not res:
