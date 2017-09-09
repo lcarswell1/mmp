@@ -13,6 +13,6 @@ class Track:
     title = attrib()
     meta = attrib(default=Factory(dict))
 
-    def play(self):
-        """Play the track."""
+    def get_stream(self):
+        """Return a stream which can be played."""
         raise NotImplementedError('You must implement this method yourself.')

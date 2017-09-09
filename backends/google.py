@@ -40,14 +40,12 @@ class GoogleTrack(Track):
     duration = attrib(default=Factory(timedelta))
     id = attrib(default=Factory(lambda: None))
 
-    def play(self):
+    def get_stream(self):
         """Check this track has been downloaded first."""
         assert self.id is not None
-        s = URLStream(
+        return URLStream(
             api.get_stream_url(self.id).encode()
         )
-        s.play()
-        return s
 
     @classmethod
     def from_dict(cls, data):
