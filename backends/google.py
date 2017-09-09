@@ -19,7 +19,6 @@ from mmp.ui.panels.backend_panel import BackendPanel
 logger = logging.getLogger(__name__)
 
 data_dir = None
-
 downloading = []
 
 
@@ -74,7 +73,6 @@ def build_playlists():
     if not authenticated:
         try_login()
         return True
-    print('Build playlists.')
     return True
 
 
@@ -95,7 +93,8 @@ def build_library():
         track = tracks.pop(0)
         wx.CallAfter(library_backend.panel.add_result, track)
 
-    add_job('Add library tracks', add_tracks, run_every=0.1)
+    add_job('Add library tracks', add_tracks, run_every=0.05)
+    return True
 
 
 def on_init(backend):
