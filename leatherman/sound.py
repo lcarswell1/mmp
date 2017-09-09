@@ -14,6 +14,7 @@ class Playing:
 
 
 output = Output()
+played = []
 queue = []
 old_stream = None
 new_stream = None
@@ -37,6 +38,7 @@ def play(track):
     """Play a track."""
     global new_stream
     if new_stream is not None:
+        played.append(new_stream)
         new_stream.stream.pause()
     stream = track.get_stream()
     new_stream = Playing(track, stream)
