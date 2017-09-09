@@ -29,10 +29,14 @@ class BackendPanel(SizedPanel):
             wx.WXK_RETURN, self.on_activate, control=self.results
         )
 
-    def do_search(self, text):
+    def do_search(self, text, backend=None):
         """This method will be called as a job to gather the results from
-        self.backend.on_search and pass them to self.add_results."""
-        results = self.backend.on_search(text)
+        the on_search hook of the provided backend (or self.backend) and pass
+        them to self.add_results."""
+        if backend is None:
+            backend = self.backend
+        logger.debug('Searching %r for %s.', backend, text)
+        results = backend.on_search(text)
 
         def finalise_search():
             """Add the results and clear the text field."""
@@ -45,7 +49,6 @@ class BackendPanel(SizedPanel):
     def on_search(self, event):
         """The enter key was pressed in the search field."""
         text = self.search_field.GetValue()
-        logger.debug('Search: %s.', text)
         add_job(
             'Add results from %s' % self.backend.name,
             partial(self.do_search, text), one_shot=True
