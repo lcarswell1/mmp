@@ -93,10 +93,12 @@ def build_playlists():
     num_playlists = len(playlists_data)
     logger.info('Loaded playlists: %d.', num_playlists)
 
-    def f():
+    def add_playlists():
         """Add playlists."""
-        for playlist in playlists_data:
-            add_playlist(playlist)
+        if not playlists_data:
+            return True
+        playlist = playlists_data.pop(0)
+        wx.CallAfter(add_playlist, playlist)
 
     def finalise_playlists():
         """Only start when all playlists have been loaded."""
@@ -126,7 +128,7 @@ def build_playlists():
             return True
 
     add_job('Finalise playlists', finalise_playlists)
-    wx.CallAfter(f)
+    add_job('Add Playlists', add_playlists, run_every=load_speed)
     return True
 
 
@@ -146,6 +148,7 @@ def add_playlist(playlist):
         root=playlists_backend.node
     )
     backend.frame.add_backend(b)
+    b.playlist_id = playlist['id']
     playlists.append((b, playlist['tracks']))
     logger.info(
         'Loaded the %s playlist in %g seconds.', b.name, time() - started
