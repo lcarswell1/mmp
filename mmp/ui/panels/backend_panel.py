@@ -128,5 +128,9 @@ class BackendPanel(SizedPanel):
         if res is not None:
             logger.info('Playing %r.', res)
             sound.play(res)
+            sound.queue.clear()
+            for index in range(res.index + 1, self.results.Count):
+                sound.queue.append(self.results.GetClientData(index))
+                logger.info('Queued %r.', sound.queue[-1])
         else:
             wx.Bell()
