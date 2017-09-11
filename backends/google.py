@@ -198,7 +198,7 @@ def build_promoted_songs():
 
 
 def display_album(event):
-    """Display the album of the current track."""
+    """Display the album of the current result."""
     res = backend.panel.get_result()
     if res is None:
         return wx.Bell()
@@ -262,7 +262,7 @@ def select_artist(ids, func, *args, **kwargs):
 
 
 def display_top_tracks(event=None, ids=None):
-    """Load the top tracks for one of the artist(s) whose ID is in ids.."""
+    """Display the top tracks for the current result."""
     assert event or ids
     if ids is None:
         res = backend.panel.get_result()
