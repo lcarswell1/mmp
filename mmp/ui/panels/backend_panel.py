@@ -75,9 +75,12 @@ class BackendPanel(SizedPanel):
         """Return a user-friendly string representation of track."""
         if backend is None:
             backend = self.backend
-        return app.frame.track_format_template.render(
-            **asdict(track), backend=backend
-        )
+        try:
+            return app.frame.track_format_template.render(
+                **asdict(track), backend=backend
+            )
+        except Exception as e:
+            return str(e)
 
     def add_result(self, track, backend=None):
         """Adds a Track instance to self.results."""

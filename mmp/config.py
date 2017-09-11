@@ -23,8 +23,12 @@ class Config(Section):
         title = 'Interface'
 
         track_format = TrackFormatOption(
-            '{{ artist }} - {{ album }} - {{ number }} - {{ title}} ({{ '
-            'duration | format_timedelta }} *{{ backend.name }}*',
+            '{{ artist }} - '
+            '{{ album }} - '
+            '{{ number }} - '
+            '{{ title}} '
+            '{% if duration is defined %}({{ duration | format_timedelta }}) '
+            '{% endif %}*{{ backend.name }}*',
             title='&Result Format'
         )
         last_backend = Option('', title='The last &Backend to be viewed')
