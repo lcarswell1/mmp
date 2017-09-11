@@ -1,13 +1,16 @@
 # pip install --upgrade --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
 pytest
 flake8
-hg+http://hg.q-continuum.net/platform_utils
-hg+http://hg.q-continuum.net/libloader
-hg+http://hg.q-continuum.net/sound_lib
 gmusicapi
 requests
 jinja2
+six
+attrs
+sqlalchemy
+attrs-sqlalchemy
+hg+http://hg.q-continuum.net/platform_utils
+hg+http://hg.q-continuum.net/libloader
+hg+http://hg.q-continuum.net/sound_lib
 git+https://github.com/chrisnorman7/default_argparse.git
 git+https://github.com/chrisnorman7/lyricscraper.git
 git+https://github.com/chrisnorman7/simpleconf.git
-six
