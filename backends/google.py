@@ -4,7 +4,6 @@ import os
 import os.path
 import logging
 from time import time
-from functools import partial
 from datetime import timedelta
 import wx
 from wx.lib.sized_controls import SizedPanel
@@ -37,7 +36,33 @@ load_speed = 0.05
 class GooglePanel(BackendPanel):
     def __init__(self, *args, **kwargs):
         super(GooglePanel, self).__init__(*args, **kwargs)
+        self.processing_tracks = False
+        self.tracks_data = None
+        self.logger = logging.getLogger(self.backend.name + ' Playlist')
+        self.Bind(wx.EVT_SHOW, self.on_show)
         self.search_field.Disable()
+
+    def add_track(self):
+        if not self.tracks_data:
+            if self.tracks_data is not None:  # Empty list.
+                self.logger.info('Tracks loaded.')
+            self.tracks_data = None
+            self.processing_tracks = False
+            return True  # Stop.
+        d = self.tracks_data.pop(0)
+        track = GoogleTrack.from_dict(d)
+        self.logger.info('Loading track %r.', track)
+        wx.CallAfter(self.add_result, track)
+
+    def on_show(self, event):
+        """Start adding tracks."""
+        event.Skip()
+        if self.tracks_data and not self.processing_tracks:
+            self.processing = True
+            add_job(
+                'Load tracks for %s' % self.backend.name,
+                self.add_track, run_every=load_speed
+            )
 
     def do_search(self, event):
         pass  # Do nothing.
@@ -64,7 +89,10 @@ class PlaylistsPanel(SizedPanel):
 
 class PlaylistPanel(GooglePanel):
     """A panel for displaying the contents of playlists."""
-    pass
+
+    def __init__(self, *args, **kwargs):
+        self.id = None
+        super(PlaylistPanel, self).__init__(*args, **kwargs)
 
 
 class LibraryPanel(GooglePanel):
@@ -72,16 +100,10 @@ class LibraryPanel(GooglePanel):
     pass
 
 
-def add_tracks(tracks, panel):
-    if not tracks:
-        return True  # Stop.
-    track = tracks.pop(0)
-    wx.CallAfter(panel.add_result, track)
-
-
 def build_playlists():
     """Get playlists from Google and add them to playlists_root."""
     playlists.clear()
+    logger.info('Loading playlists...')
     if not authenticated:
         try_login()
         return True
@@ -100,34 +122,6 @@ def build_playlists():
         playlist = playlists_data.pop(0)
         wx.CallAfter(add_playlist, playlist)
 
-    def finalise_playlists():
-        """Only start when all playlists have been loaded."""
-        if len(playlists) == num_playlists:  # Let's go.
-            logger.info('Loading playlist tracks...')
-            playlist_tracks = []
-
-            def finish():
-                """Load all entries from playlist_tracks."""
-                if not playlist_tracks:
-                    return True
-                backend, tracks = playlist_tracks.pop(0)
-                backend.panel.add_results(tracks)
-
-            for backend, data in playlists:
-                logger.info(
-                    'Loading tracks for the %s playlist.', backend.name
-                )
-                tracks = [
-                    GoogleTrack.from_dict(
-                        x['track']
-                    ) for x in data if 'track' in x
-                ]
-                logger.info('Tracks: %d.', len(tracks))
-                playlist_tracks.append((backend, tracks))
-            add_job('Load Playlist Tracks', finish, run_every=load_speed)
-            return True
-
-    add_job('Finalise playlists', finalise_playlists)
     add_job('Add Playlists', add_playlists, run_every=load_speed)
     return True
 
@@ -136,6 +130,9 @@ def add_playlist(playlist):
     """Add a single playlist."""
     started = time()
     name = playlist['name']
+    id = playlist['id']
+    if id in playlists:
+        return False  # Go to the next one.
     b = Backend(
         backend.frame,  # Frame.
         backend.short_name,  # Short name.
@@ -147,9 +144,9 @@ def add_playlist(playlist):
         PlaylistPanel,  # Panel.
         root=playlists_backend.node
     )
+    b.panel.id = id
+    b.panel.tracks_data = [x['track'] for x in playlist.get('tracks', [])]
     backend.frame.add_backend(b)
-    b.playlist_id = playlist['id']
-    playlists.append((b, playlist['tracks']))
     logger.info(
         'Loaded the %s playlist in %g seconds.', b.name, time() - started
     )
@@ -164,12 +161,7 @@ def build_library():
     logger.info('Retrieving library.')
     l = api.get_all_songs()
     logger.info('Library tracks: %d.', len(l))
-    tracks = [GoogleTrack.from_dict(x) for x in l]
-    add_job(
-        'Add library tracks',
-        partial(add_tracks, tracks, library_backend.panel),
-        run_every=load_speed
-    )
+    library_backend.panel.tracks_data = l
     return True
 
 
