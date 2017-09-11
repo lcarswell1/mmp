@@ -101,3 +101,4 @@ ENV/
 .mypy_cache/
 *.wav
 gmp3
+*.json

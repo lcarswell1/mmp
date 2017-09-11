@@ -154,7 +154,12 @@ def add_playlist(playlist):
         root=playlists_backend.node
     )
     b.panel.id = id
-    b.panel.tracks_data = [x['track'] for x in playlist.get('tracks', [])]
+    b.panel.tracks_data = []
+    for data in playlist.get('tracks', []):
+        if 'track' in data:
+            b.panel.tracks_data.append(data['track'])
+        else:
+            logger.warning('No "track" key found in data:\n%r', data)
     backend.frame.add_backend(b)
     logger.info(
         'Loaded the %s playlist in %g seconds.', b.name, time() - started
@@ -262,6 +267,38 @@ class GoogleTrack(Track):
         )
 
 
+@attrs
+class GoogleAlbum(Track):
+    """A single album."""
+    id = attrib(default=Factory(lambda: None))
+
+    @classmethod
+    def from_dict(cls, data):
+        """Build from a dictionary."""
+        return cls(
+            data.get('artist', data.get('albumArtist', 'Unknown Artist')),
+            data.get('name', 'Unknown Album'),
+            0,
+            '%s (%s)' % (data['name'], data['year']),
+            id=data['albumId']
+        )
+
+    def activate(self):
+        """Load the contents of this album via the jobs framework.."""
+        add_job('Load album tracks for %s' % self.title, self.load)
+
+    def load(self):
+        """Load this album into the results view."""
+        logger.info('Downloading information for %r.', self)
+        data = api.get_album_info(self.id)['tracks']
+        logger.info('Tracks: %d.', len(data))
+        tracks = []
+        for datum in data:
+            tracks.append(GoogleTrack.from_dict(datum))
+        backend.panel.add_results(tracks)
+        return True
+
+
 def try_login():
     global authenticated
     if authenticated:
@@ -310,8 +347,10 @@ def on_search(value):
     results = api.search(value)
     for key, value in results.items():
         logger.info('%s: %d.', key, len(value))
-    songs = results['song_hits']
     tracks = []
-    for data in songs:
+    for data in results['song_hits']:
         tracks.append(GoogleTrack.from_dict(data['track']))
+    for data in results['album_hits']:
+        data = data['album']
+        tracks.append(GoogleAlbum.from_dict(data))
     return tracks

@@ -119,8 +119,12 @@ class BackendPanel(SizedPanel):
         """An entry in self.results has been clicked."""
         res = self.get_result()
         if res is not None:
-            logger.info('Activated %r.', res)
-            sound.play(res)
+            try:
+                res.activate()
+                logger.info('Self activation: %r.', res)
+            except NotImplementedError:
+                logger.info('Playing: %r.', res)
+                sound.play(res)
             sound.queue.clear()
             for index in range(res.index + 1, self.results.Count):
                 sound.queue.append(self.results.GetClientData(index))
