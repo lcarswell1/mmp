@@ -20,7 +20,7 @@ class BackendPanel(SizedPanel):
         self.backend = backend
         super(BackendPanel, self).__init__(*args, **kwargs)
         self.SetSizerType('form')
-        self.search_label = wx.StaticText(self, label='&Search')
+        self.search_label = wx.StaticText(self, label='&Find')
         self.search_field = wx.TextCtrl(self)
         add_hotkey(wx.WXK_RETURN, self.on_search, control=self.search_field)
         self.results_label = wx.StaticText(self, label='&Results')
