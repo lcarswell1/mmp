@@ -202,12 +202,16 @@ def display_album(event):
     res = backend.panel.get_result()
     if res is None:
         return wx.Bell()
-    if res.album_id is None:
+    if isinstance(res, GoogleAlbum):
+        id = res.id
+    elif isinstance(res, GoogleTrack):
+        id = res.album_id
+    else:
+        return backend.frame.on_error('You must run this command on an album.')
+    if id is None:
         return backend.frame.on_error('No album ID found.')
     add_job(
-        'Display the album for %r' % res,
-        partial(load_album, res.album_id)
-    )
+        'Display the album for %r' % res, partial(load_album, id))
 
 
 # Loading job functions:
@@ -225,12 +229,75 @@ def load_album(id):
     return True
 
 
+def select_artist(ids, func, *args, **kwargs):
+    """Select an artist from the list then run
+    func(artist_data, *args, **kwargs)
+    Where artist_data is the dictionary as returned by api.get_artist_info."""
+    artists = []
+
+    def f():
+        """Finish up."""
+        if len(artists) == 1:
+            artist = artists[0]
+        else:
+            dlg = wx.SingleChoiceDialog(
+                backend.panel, 'Choose an artist', 'Artists',
+                [a.title for a in artists]
+            )
+            if dlg.ShowModal() == wx.ID_OK:
+                artist = artists[dlg.GetSelection()]
+            else:
+                artist = None
+            dlg.Destroy()
+        func(artist, *args, **kwargs)
+
+    def load_artists():
+        if not ids:
+            wx.CallAfter(f)
+            return True
+        id = ids.pop(0)
+        artists.append(GoogleArtist.from_dict(api.get_artist_info(id)))
+
+    add_job('Load Artists', load_artists)
+
+
+def display_top_tracks(event=None, ids=None):
+    """Load the top tracks for one of the artist(s) whose ID is in ids.."""
+    assert event or ids
+    if ids is None:
+        res = backend.panel.get_result()
+        if res is None:
+            return wx.Bell()
+        if isinstance(res, GoogleTrack):
+            return display_top_tracks(ids=res.artist_ids)
+        elif isinstance(res, GoogleArtist):
+            return display_top_tracks(ids=[res.id])
+        else:
+            return backend.frame.on_error(
+                'You must run this command on a track.'
+            )
+
+    def load_top_tracks(artist):
+        """Perform the load."""
+        if artist.top_tracks:
+            backend.panel.add_results(artist.top_tracks)
+        else:
+            backend.frame.on_error('No top tracks to load.')
+
+    select_artist(ids, load_top_tracks)
+
+
+# ---------- #
 def on_init(backend):
     global data_dir, playlists_backend, library_backend, \
            promoted_songs_backend, hotkeys_section_id
     hotkeys_section_id = add_section('Google Play Music')
     add_hotkey(
         '5', display_album, modifiers=wx.ACCEL_CTRL,
+        section_id=hotkeys_section_id, control=backend.panel.results
+    )
+    add_hotkey(
+        ';', display_top_tracks, modifiers=wx.ACCEL_CTRL,
         section_id=hotkeys_section_id, control=backend.panel.results
     )
     data_dir = os.path.join(media_dir, 'Google')
@@ -280,11 +347,16 @@ def get_id(d):
 
 
 @attrs
-class GoogleTrack(Track):
+class GoogleTrackBase(Track):
+    """Adds an id argument."""
+    id = attrib(default=Factory(lambda: None))
+
+
+@attrs
+class GoogleTrack(GoogleTrackBase):
     """A track from Google."""
     duration = attrib(default=Factory(timedelta))
     genre = attrib(default=Factory(lambda: None))
-    id = attrib(default=Factory(lambda: None))
     album_id = attrib(default=Factory(lambda: None))
     artist_ids = attrib(default=Factory(list))
 
@@ -314,9 +386,8 @@ class GoogleTrack(Track):
 
 
 @attrs
-class GoogleAlbum(Track):
+class GoogleAlbum(GoogleTrackBase):
     """A single album."""
-    id = attrib(default=Factory(lambda: None))
 
     @classmethod
     def from_dict(cls, data):
@@ -335,6 +406,31 @@ class GoogleAlbum(Track):
             'Load album tracks for %s' % self.title,
             partial(load_album, self.id)
         )
+
+
+@attrs
+class GoogleArtist(GoogleTrackBase):
+    """A google artist."""
+
+    bio = attrib(default=Factory(lambda: None))
+    top_tracks = attrib(default=Factory(list))
+
+    def __attrs_post_init__(self):
+        self.top_tracks = [GoogleTrack.from_dict(x) for x in self.top_tracks]
+
+    @classmethod
+    def from_dict(cls, data):
+        """Load from a dictionary."""
+        return cls(
+            None, None, None, data.get('name', 'Unknown Artist'),
+            id=data.get('artistId', None),
+            bio=data.get('artistBio', None),
+            top_tracks=data.get('topTracks', [])
+        )
+
+    def activate(self):
+        """Show top tracks."""
+        display_top_tracks([self.id])
 
 
 def try_login():
@@ -386,9 +482,12 @@ def on_search(value):
     for key, value in results.items():
         logger.info('%s: %d.', key, len(value))
     tracks = []
-    for data in results['song_hits']:
+    for data in results.get('song_hits', []):
         tracks.append(GoogleTrack.from_dict(data['track']))
-    for data in results['album_hits']:
+    for data in results.get('album_hits', []):
         data = data['album']
         tracks.append(GoogleAlbum.from_dict(data))
+    for data in results.get('artist_hits', []):
+        data = data['artist']
+        tracks.append(GoogleArtist.from_dict(data))
     return tracks
