@@ -29,7 +29,9 @@ def add_section(name, parent_id=None):
         ).first()
         if section is None:
             section = Section(name=name, parent_id=parent_id)
-        return section
+        s.add(section)
+        s.commit()
+        return section.id
 
 
 def handle_hotkey(event):
