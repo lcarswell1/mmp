@@ -1,8 +1,13 @@
+* means implemented.
+- Means in progress.
+. Means not yet implemented.
+
 From Matt J:
-When searching for one thing, it should jump lists lol it should keep playing from the list it started playing from 9 seconds ago
+* When searching for one thing, it should jump lists lol it should keep playing from the list it started playing from 9 seconds ago
 
 Chris Norman:
 Backends:
-* Youtube
-* Soundcloud
-* Spotify
+. Youtube
+. Soundcloud
+. Spotify
+- Google.
