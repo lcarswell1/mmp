@@ -7,12 +7,29 @@ from default_argparse import parser
 from mmp import app
 from mmp.ui.main_frame import MainFrame
 from mmp.config import config
+from mmp.db import session, Hotkey, Section
+
+parser.add_argument(
+    '-c',
+    '--clear-db',
+    action='store_true',
+    help='Clear the database to restore defaults'
+)
 
 if __name__ == '__main__':
     args = parser.parse_args()
     logging.basicConfig(
         level=args.log_level, stream=args.log_file, format=args.log_format
     )
+    if args.clear_db:
+        logging.info('Clearing the database.')
+        with session() as s:
+            for table in (Hotkey, Section):
+                q = s.query(table)
+                n = q.count()
+                logging.info('Clearing table %s.', table.__table__.name)
+                q.delete()
+                logging.info('Rows affected: %d.', n)
     app.frame = MainFrame(None, title=app.name)
     app.frame.Show(True)
     app.frame.Maximize()

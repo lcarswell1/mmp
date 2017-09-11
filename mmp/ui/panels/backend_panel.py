@@ -6,7 +6,6 @@ import wx
 from wx.lib.sized_controls import SizedPanel
 from attr import asdict
 from ... import app, sound
-from ...hotkeys import add_hotkey
 from ...jobs import add_job
 
 logger = logging.getLogger(__name__)
@@ -28,17 +27,8 @@ class BackendPanel(SizedPanel):
         self.SetSizerType('form')
         self.search_label = wx.StaticText(self, label='&Find')
         self.search_field = wx.TextCtrl(self)
-        add_hotkey(wx.WXK_RETURN, self.on_search, control=self.search_field)
         self.results_label = wx.StaticText(self, label='&Results')
         self.results = wx.ListBox(self)
-        add_hotkey(
-            wx.WXK_RETURN, self.on_activate, control=self.results
-        )
-        add_hotkey(wx.WXK_MENU, self.on_context, control=self.results)
-        add_hotkey(
-            wx.WXK_F10, self.on_context,
-            modifiers=wx.ACCEL_SHIFT, control=self.results
-        )
         self.results.Bind(wx.EVT_RIGHT_DOWN, self.on_context)
 
     def on_context(self, event):

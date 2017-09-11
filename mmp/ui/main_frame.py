@@ -36,6 +36,10 @@ class MainFrame(wx.Frame):
         add_hotkey(
             wx.WXK_RIGHT, self.left_panel.on_next, modifiers=wx.ACCEL_CTRL
         )
+        add_hotkey(wx.WXK_RETURN, self.on_activate)
+        add_hotkey(wx.WXK_MENU, self.on_context)
+        add_hotkey(
+            wx.WXK_F10, self.on_context, modifiers=wx.ACCEL_SHIFT)
         self.tree = self.left_panel.tree  # Shorthand.
         self.right_panel = RightPanel(self.splitter)
         self.splitter.SplitHorizontally(self.left_panel, self.right_panel)
@@ -46,6 +50,25 @@ class MainFrame(wx.Frame):
         self.backends = []  # To be populated by self.load_backends.
         self.jobs_thread = Thread(target=run_jobs)
         self.jobs_thread.start()
+
+    def on_activate(self, event):
+        """Handle the return key probably."""
+        c = event.EventObject
+        p = c.GetParent()
+        if isinstance(c, wx.TextCtrl):
+            func = p.on_search
+        elif isinstance(c, wx.ListBox):
+            func = p.on_activate
+        else:
+            return event.Skip()
+        func(event)
+
+    def on_context(self, event):
+        """Handle the applications key ETC."""
+        c = event.EventObject
+        p = c.GetParent()
+        if isinstance(c, wx.ListBox):
+            p.on_context(event)
 
     def on_show(self, event):
         """Populate the tree."""
