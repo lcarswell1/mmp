@@ -19,6 +19,12 @@ class BackendPanel(SizedPanel):
         """Initialise an add some controls."""
         self.backend = backend
         super(BackendPanel, self).__init__(*args, **kwargs)
+        self.menu = wx.Menu()
+        self.play_menu_item = self.menu.Append(
+            wx.NewId(), '&Play',
+            'Play the track that is selected.'
+        )
+        self.Bind(wx.EVT_MENU, self.on_activate, self.play_menu_item)
         self.SetSizerType('form')
         self.search_label = wx.StaticText(self, label='&Find')
         self.search_field = wx.TextCtrl(self)
@@ -28,6 +34,22 @@ class BackendPanel(SizedPanel):
         add_hotkey(
             wx.WXK_RETURN, self.on_activate, control=self.results
         )
+        add_hotkey(wx.WXK_MENU, self.on_context, control=self.results)
+        add_hotkey(
+            wx.WXK_F10, self.on_context,
+            modifiers=wx.ACCEL_SHIFT, control=self.results
+        )
+        self.results.Bind(wx.EVT_RIGHT_DOWN, self.on_context)
+
+    def on_context(self, event):
+        """Show the context menu self.menu."""
+        if self.menu is None or (
+            self.get_result() is None and self.results.HitTest(
+                event.GetPosition()
+            ) == -1
+        ):
+            return wx.Bell()
+        self.results.PopupMenu(self.menu)
 
     def do_search(self, text, backend=None):
         """This method will be called as a job to gather the results from
@@ -59,15 +81,19 @@ class BackendPanel(SizedPanel):
             partial(self.do_search, text)
         )
 
+    def stringify(self, track, backend=None):
+        """Return a user-friendly string representation of track."""
+        if backend is None:
+            backend = self.backend
+        return app.frame.track_format_template.render(
+            **asdict(track), backend=backend
+        )
+
     def add_result(self, track, backend=None):
         """Adds a Track instance to self.results."""
         if backend is None:
             backend = self.backend
-        res = self.results.Append(
-            app.frame.track_format_template.render(
-                **asdict(track), backend=backend
-            )
-        )
+        res = self.results.Append(self.stringify(track, backend=backend))
         self.results.SetClientData(res, track)
         if not res:
             if isinstance(self.FindFocus(), wx.TextCtrl):
