@@ -5,6 +5,7 @@ from threading import Thread
 from inspect import isclass
 import wx
 import six
+from attr import attrs, attrib
 import backends
 from .. import app
 from ..jobs import run_jobs
@@ -13,9 +14,18 @@ from .panels.left_panel import LeftPanel
 from .panels.right_panel import RightPanel
 from ..app import name
 from ..config import config
-from ..hotkeys import handle_hotkey, add_hotkey
+from ..hotkeys import handle_hotkey, add_hotkey, functions, section_media
+from ..db import session, Section, Hotkey
 
 logger = logging.getLogger(__name__)
+
+
+@attrs
+class DBProxy:
+    """Represents an entry in one of the database tables."""
+
+    cls = attrib()
+    id = attrib()
 
 
 class MainFrame(wx.Frame):
@@ -30,11 +40,16 @@ class MainFrame(wx.Frame):
         self.left_panel = LeftPanel(self.splitter)
         self.Bind(wx.EVT_CHAR_HOOK, handle_hotkey)
         add_hotkey(
-            wx.WXK_LEFT, self.left_panel.on_previous, modifiers=wx.ACCEL_CTRL
+            wx.WXK_LEFT, self.left_panel.on_previous, modifiers=wx.ACCEL_CTRL,
+            section_id=section_media
         )
-        add_hotkey(wx.WXK_SPACE, self.left_panel.on_play_pause)
         add_hotkey(
-            wx.WXK_RIGHT, self.left_panel.on_next, modifiers=wx.ACCEL_CTRL
+            wx.WXK_SPACE, self.left_panel.on_play_pause,
+            section_id=section_media
+        )
+        add_hotkey(
+            wx.WXK_RIGHT, self.left_panel.on_next, modifiers=wx.ACCEL_CTRL,
+            section_id=section_media
         )
         add_hotkey(wx.WXK_RETURN, self.on_activate)
         add_hotkey(wx.WXK_MENU, self.on_context)
@@ -50,6 +65,27 @@ class MainFrame(wx.Frame):
         self.backends = []  # To be populated by self.load_backends.
         self.jobs_thread = Thread(target=run_jobs)
         self.jobs_thread.start()
+
+    def add_section(self, section, root=None):
+        """Add a section recursively with all its options to the provided
+        section or self.hotkeys_root."""
+        if root is None:
+            root = self.hotkeys_root
+        section_item = self.tree.AppendItem(root, section.name)
+        self.tree.SetItemData(section_item, DBProxy(Section, section.id))
+        if section.children or section.hotkeys:
+            self.tree.SetItemHasChildren(section_item)
+        logger.info('Added %r.', section)
+        for subsection in section.children:
+            self.add_section(subsection, section_item)
+        for hotkey in section.hotkeys:
+            hotkey_item = self.tree.AppendItem(
+                section_item, functions[
+                    (hotkey.control_id, hotkey.func_name)
+                ].__doc__
+            )
+            self.tree.SetItemData(hotkey_item, DBProxy(Hotkey, hotkey.id))
+            logger.info('Added %r.', hotkey)
 
     def on_activate(self, event):
         """Handle the return key probably."""
@@ -74,14 +110,20 @@ class MainFrame(wx.Frame):
         """Populate the tree."""
         event.Skip()
         self.root = self.tree.AddRoot(name)
-        self.tree.SetItemHasChildren(self.root)
         self.backends_root = self.tree.AppendItem(self.root, 'Backends')
-        self.tree.SetItemHasChildren(self.backends_root)
+        self.hotkeys_root = self.tree.AppendItem(self.root, 'Hotkeys')
+        for root in (self.root, self.backends_root, self.hotkeys_root):
+            self.tree.SetItemHasChildren(root)
         self.config_root = self.add_config(self.root, config)
         self.load_backends()
         self.tree.ExpandAll()
         self.tree.Collapse(self.config_root)
         config.load()
+        with session() as s:
+            # Clear out inactive hotkeys.
+            s.query(Hotkey).filter_by(active=False).delete()
+            for section in s.query(Section).filter_by(parent=None):
+                self.add_section(section)
         if config.interface['last_backend']:
             for b in self.backends:
                 if b.short_name == config.interface['last_backend']:
