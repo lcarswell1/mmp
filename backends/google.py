@@ -3,6 +3,7 @@
 import os
 import os.path
 import logging
+from functools import partial
 from time import time
 from datetime import timedelta
 import wx
@@ -191,6 +192,21 @@ def build_promoted_songs():
     return True
 
 
+# Loading job functions:
+
+
+def load_album(id):
+    """Load this album into the results view."""
+    logger.info('Downloading information for album %r.', id)
+    data = api.get_album_info(id)['tracks']
+    logger.info('Tracks: %d.', len(data))
+    tracks = []
+    for datum in data:
+        tracks.append(GoogleTrack.from_dict(datum))
+    backend.panel.add_results(tracks)
+    return True
+
+
 def on_init(backend):
     global data_dir, playlists_backend, library_backend, promoted_songs_backend
     data_dir = os.path.join(media_dir, 'Google')
@@ -243,7 +259,10 @@ def get_id(d):
 class GoogleTrack(Track):
     """A track from Google."""
     duration = attrib(default=Factory(timedelta))
+    genre = attrib(default=Factory(lambda: None))
     id = attrib(default=Factory(lambda: None))
+    album_id = attrib(default=Factory(lambda: None))
+    artist_ids = attrib(default=Factory(list))
 
     def get_stream(self):
         """Check this track has been downloaded first."""
@@ -263,7 +282,10 @@ class GoogleTrack(Track):
             duration=timedelta(
                 milliseconds=int(data.get('durationMillis', '0'))
             ),
-            id=get_id(data)
+            genre=data.get('genre', 'Unknown Genre'),
+            id=get_id(data),
+            album_id=data.get('albumId', None),
+            artist_ids=data.get('artistId', [])
         )
 
 
@@ -285,18 +307,10 @@ class GoogleAlbum(Track):
 
     def activate(self):
         """Load the contents of this album via the jobs framework.."""
-        add_job('Load album tracks for %s' % self.title, self.load)
-
-    def load(self):
-        """Load this album into the results view."""
-        logger.info('Downloading information for %r.', self)
-        data = api.get_album_info(self.id)['tracks']
-        logger.info('Tracks: %d.', len(data))
-        tracks = []
-        for datum in data:
-            tracks.append(GoogleTrack.from_dict(datum))
-        backend.panel.add_results(tracks)
-        return True
+        add_job(
+            'Load album tracks for %s' % self.title,
+            partial(load_album, self.id)
+        )
 
 
 def try_login():
