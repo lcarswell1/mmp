@@ -5,7 +5,6 @@ from threading import Thread
 from inspect import isclass
 import wx
 import six
-from attr import attrs, attrib
 import backends
 from .. import app
 from ..jobs import run_jobs
@@ -15,17 +14,9 @@ from .panels.right_panel import RightPanel
 from ..app import name
 from ..config import config
 from ..hotkeys import handle_hotkey, add_hotkey, functions, section_media
-from ..db import session, Section, Hotkey
+from ..db import session, Section, Hotkey, DBProxy
 
 logger = logging.getLogger(__name__)
-
-
-@attrs
-class DBProxy:
-    """Represents an entry in one of the database tables."""
-
-    cls = attrib()
-    id = attrib()
 
 
 class MainFrame(wx.Frame):

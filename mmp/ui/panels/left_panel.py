@@ -4,11 +4,13 @@ import logging
 import wx
 from simpleconf import Section
 from simpleconf.dialogs.wx import SimpleConfWxPanel
+from .hotkey_panel import HotkeyPanel
 from .right_panel import RightPanel
 from .global_backend_panel import GlobalBackendPanel
 from ...backends import Backend
 from ...config import config
 from ... import sound, app
+from ...db import DBProxy, Hotkey
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +95,10 @@ class LeftPanel(wx.Panel):
                 self.global_backend_panel = GlobalBackendPanel(splitter)
                 logger.debug('Created %r.', self.global_backend_panel)
             new = self.global_backend_panel
+        elif isinstance(data, DBProxy) and data.cls is Hotkey:
+            if data.panel is None:
+                data.panel = HotkeyPanel(data, splitter)
+            new = data.panel
         else:
             new = wx.Panel(splitter)
         logger.debug('Replacing frame %r with %r.', old, new)
