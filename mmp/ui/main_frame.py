@@ -6,7 +6,7 @@ from inspect import isclass
 import wx
 import six
 import backends
-from .. import app
+from .. import app, sound
 from ..jobs import run_jobs
 from ..backends import Backend
 from .panels.left_panel import LeftPanel
@@ -40,6 +40,14 @@ class MainFrame(wx.Frame):
         )
         add_hotkey(
             wx.WXK_RIGHT, self.left_panel.on_next, modifiers=wx.ACCEL_CTRL,
+            section_id=section_media
+        )
+        add_hotkey(
+            wx.WXK_UP, self.volume_up, modifiers=wx.ACCEL_CTRL,
+            section_id=section_media
+        )
+        add_hotkey(
+            wx.WXK_DOWN, self.volume_down, modifiers=wx.ACCEL_CTRL,
             section_id=section_media
         )
         add_hotkey(wx.WXK_RETURN, self.on_activate)
@@ -100,6 +108,7 @@ class MainFrame(wx.Frame):
     def on_show(self, event):
         """Populate the tree."""
         event.Skip()
+        self.set_volume(config.sound['volume'])
         self.root = self.tree.AddRoot(name)
         self.backends_root = self.tree.AppendItem(self.root, 'Backends')
         self.hotkeys_root = self.tree.AppendItem(self.root, 'Hotkeys')
@@ -195,3 +204,32 @@ class MainFrame(wx.Frame):
         for module in backends.backends:
             self.backend_from_module(module)
         logger.info('Backends loaded: %d.', len(self.backends))
+
+    def set_volume(self, value):
+        """Set the volume to a value."""
+        if value > 100:
+            wx.Bell()
+            value = 100
+        elif value < 0:
+            wx.Bell()
+            value = 0
+        v = (
+            (
+                pow(
+                    config.sound['volume_base'],
+                    value / 100
+                ) - 1
+            ) / (
+                config.sound['volume_base'] - 1
+            )
+        ) * 100
+        config.sound['volume'] = value
+        sound.output.set_volume(v)
+
+    def volume_up(self, event):
+        """Turn the volume up."""
+        self.set_volume(config.sound['volume'] + config.sound['volume_adjust'])
+
+    def volume_down(self, event):
+        """Turn the volume down."""
+        self.set_volume(config.sound['volume'] - config.sound['volume_adjust'])

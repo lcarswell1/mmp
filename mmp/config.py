@@ -2,7 +2,7 @@
 
 import os.path
 from simpleconf import Section, Option
-from simpleconf.validators import Integer
+from simpleconf.validators import Integer, Float
 from . import app
 
 
@@ -36,11 +36,20 @@ class Config(Section):
     class sound(Section):
         title = 'Sound'
 
+        volume = Option(100, validator=Integer(min=0, max=100))
         crossfade_amount = Option(
             0, title='The time to spend crossfading between songs',
             validator=Integer(min=0)
         )
-        option_order = [crossfade_amount]
+        volume_base = Option(
+            10.0, title='&Volume Logarithm Base',             validator=Float(
+                min=1.00001, max=100.0
+            )
+        )
+        volume_adjust = Option(
+            2, title='Volume &Sensativity', validator=Integer(min=1, max=100)
+        )
+        option_order = [crossfade_amount, volume_base, volume_adjust]
 
     class backends (Section):
         title = 'Backends'
