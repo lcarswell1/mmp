@@ -1,8 +1,11 @@
 """Sound-related stuff."""
 
+import logging
 from sound_lib.output import Output
 from attr import attrs, attrib
 from .jobs import add_job
+
+logger = logging.getLogger(__name__)
 
 
 @attrs
@@ -37,8 +40,10 @@ add_job('Play Manager', play_manager)
 def play(track):
     """Play a track."""
     global new_stream
+    logger.info('Playing %r.', track)
     if new_stream is not None:
-        played.append(new_stream)
+        played.append(old_stream)
+        logger.info('Played: %r.', old_stream)
         if new_stream.stream.is_playing:
             new_stream.stream.pause()
     stream = track.get_stream()
