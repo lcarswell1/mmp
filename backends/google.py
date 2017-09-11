@@ -27,9 +27,10 @@ name = "Google Play Music"
 api = Mobileclient()
 backend = None
 authenticated = False
-playlists = []
+playlists = {}
 playlists_backend = None
 library_backend = None
+promoted_songs_backend = None
 load_speed = 0.05
 
 
@@ -75,6 +76,14 @@ class PlaylistsPanel(SizedPanel):
         self.SetSizerType('vertical')
         self.refresh_playlists = wx.Button(self, label='Refresh &Playlists')
         self.refresh_library = wx.Button(self, label='Refresh &Library')
+        self.refresh_promoted_songs = wx.Button(
+            self, label='Refresh &Promoted Songs'
+        )
+        self.refresh_promoted_songs.Bind(
+            wx.EVT_BUTTON, lambda event: add_job(
+                'Refresh Promoted Songs', build_promoted_songs
+            )
+        )
         self.refresh_playlists.Bind(
             wx.EVT_BUTTON, lambda event: add_job(
                 'Refresh Playlists', build_playlists
@@ -102,7 +111,6 @@ class LibraryPanel(GooglePanel):
 
 def build_playlists():
     """Get playlists from Google and add them to playlists_root."""
-    playlists.clear()
     logger.info('Loading playlists...')
     if not authenticated:
         try_login()
@@ -117,6 +125,7 @@ def build_playlists():
 
     def add_playlists():
         """Add playlists."""
+        playlists.clear()
         if not playlists_data:
             return True
         playlist = playlists_data.pop(0)
@@ -165,8 +174,20 @@ def build_library():
     return True
 
 
+def build_promoted_songs():
+    """Get api.promoted_songs."""
+    if not authenticated:
+        try_login()
+        return True
+    logger.info('Retrieving promoted songs...')
+    l = api.get_promoted_songs()
+    logger.info('Promoted tracks: %d.', len(l))
+    promoted_songs_backend.panel.tracks_data = l
+    return True
+
+
 def on_init(backend):
-    global data_dir, playlists_backend, library_backend
+    global data_dir, playlists_backend, library_backend, promoted_songs_backend
     data_dir = os.path.join(media_dir, 'Google')
     if not os.path.isdir(data_dir):
         os.makedirs(data_dir)
@@ -192,8 +213,20 @@ def on_init(backend):
         LibraryPanel,  # Panel.
         root=backend.node
     )
+    promoted_songs_backend = Backend(
+        backend.frame,  # Frame.
+        backend.short_name + '_promoted',  # Short name.
+        'Promoted Songs',  # Name.
+        'Songs promoted by google for you.',  # Description.
+        None,  # Loop Function.
+        None,  # Configuration.
+        lambda text: None,  # Search function.
+        LibraryPanel,  # Panel.
+        root=backend.node
+    )
     backend.frame.add_backend(playlists_backend)
     backend.frame.add_backend(library_backend)
+    backend.frame.add_backend(promoted_songs_backend)
 
 
 def get_id(d):
@@ -246,6 +279,7 @@ def try_login():
     logger.info('Login successful.')
     add_job('Populate Google Playlists', build_playlists)
     add_job('Populate Google Library', build_library)
+    add_job('Populate Promoted Songs', build_promoted_songs)
 
 
 class Config(Section):
