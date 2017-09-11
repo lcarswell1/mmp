@@ -17,6 +17,7 @@ from mmp.app import media_dir
 from mmp.jobs import add_job
 from mmp.backends import Backend
 from mmp.ui.panels.backend_panel import BackendPanel
+from mmp.hotkeys import add_hotkey, add_section
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ playlists = {}
 playlists_backend = None
 library_backend = None
 promoted_songs_backend = None
+hotkeys_section_id = None
 load_speed = 0.05
 
 
@@ -192,6 +194,22 @@ def build_promoted_songs():
     return True
 
 
+# Hotkey functions:
+
+
+def display_album(event):
+    """Display the album of the current track."""
+    res = backend.panel.get_result()
+    if res is None:
+        return wx.Bell()
+    if res.album_id is None:
+        return backend.frame.on_error('No album ID found.')
+    add_job(
+        'Display the album for %r' % res,
+        partial(load_album, res.album_id)
+    )
+
+
 # Loading job functions:
 
 
@@ -208,7 +226,13 @@ def load_album(id):
 
 
 def on_init(backend):
-    global data_dir, playlists_backend, library_backend, promoted_songs_backend
+    global data_dir, playlists_backend, library_backend, \
+           promoted_songs_backend, hotkeys_section_id
+    hotkeys_section_id = add_section('Google Play Music')
+    add_hotkey(
+        '5', display_album, modifiers=wx.ACCEL_CTRL,
+        section_id=hotkeys_section_id, control=backend.panel.results
+    )
     data_dir = os.path.join(media_dir, 'Google')
     if not os.path.isdir(data_dir):
         os.makedirs(data_dir)
