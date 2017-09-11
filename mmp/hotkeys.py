@@ -81,15 +81,16 @@ def add_hotkey(key, func, modifiers=0, control=None, section_id=1):
     with session() as s:
         kwargs = dict(
             default_modifiers=modifiers, default_key=key,
-            func_name=func.__name__, control_id=control, section_id=section_id
+            func_name=func.__name__, section_id=section_id
         )
         q = s.query(Hotkey).filter_by(**kwargs)
         if q.count():
             hotkey = q.first()
-            hotkey.active = True
             logger.info('Found hotkey %r.', hotkey)
         else:
-            hotkey = Hotkey(active=True, **kwargs)
+            hotkey = Hotkey(**kwargs)
             logger.info('Registered hotkey %r.', hotkey)
+        hotkey.control_id = control
+        hotkey.active = True
         functions[(hotkey.control_id, hotkey.func_name)] = func
         s.add(hotkey)
