@@ -12,6 +12,7 @@ class Track:
     number = attrib()
     title = attrib()
     meta = attrib(default=Factory(dict))
+    index = attrib(default=Factory(lambda: None), init=False)
 
     def get_stream(self):
         """Return a stream which can be played."""

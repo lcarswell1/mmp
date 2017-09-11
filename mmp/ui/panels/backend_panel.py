@@ -94,6 +94,7 @@ class BackendPanel(SizedPanel):
         if backend is None:
             backend = self.backend
         res = self.results.Append(self.stringify(track, backend=backend))
+        track.index = res
         self.results.SetClientData(res, track)
         if not res:
             if isinstance(self.FindFocus(), wx.TextCtrl):
