@@ -70,7 +70,8 @@ class BackendPanel(SizedPanel):
         )
         self.results.SetClientData(res, track)
         if not res:
-            self.results.SetFocus()
+            if isinstance(self.FindFocus(), wx.TextCtrl):
+                self.results.SetFocus()
             self.results.SetSelection(0)
         return res
 
