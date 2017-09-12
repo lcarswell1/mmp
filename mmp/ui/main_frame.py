@@ -176,13 +176,15 @@ class MainFrame(wx.Frame):
             backend = Backend.from_module(self, module)
             backend.module = module
             logger.info('Created %r.', backend)
+            self.add_backend(backend)
         except Exception as e:
             logger.exception(e)
             return self.on_error(e)
-        self.add_backend(backend)
 
     def add_backend(self, backend):
         """Add a backend object."""
+        assert backend.panel.backend is not None, 'Backend unset for %r' \
+            % backend
         self.backends.append(backend)
         logger.info('Added %r.', backend)
         self.tree.SetItemHasChildren(backend.root)

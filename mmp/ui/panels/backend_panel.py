@@ -59,7 +59,7 @@ class BackendPanel(SizedPanel):
             wx.CallAfter(finalise_search)
         else:
             wx.CallAfter(
-                self.backend.frame.on_error, 'No results found for %s.' % text
+                backend.frame.on_error, 'No results found for %s.' % text
             )
         return True
 
