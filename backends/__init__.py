@@ -1,5 +1,5 @@
 """The main backends directory."""
 
-from . import google
+from . import google, youtube
 
-backends = [google]
+backends = [google, youtube]
