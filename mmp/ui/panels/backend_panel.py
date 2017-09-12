@@ -124,7 +124,12 @@ class BackendPanel(SizedPanel):
                 logger.info('Self activation: %r.', res)
             except NotImplementedError:
                 logger.info('Playing: %r.', res)
-                sound.play(res)
+                try:
+                    sound.play(res)
+                except Exception as e:
+                    logger.warning('Failed to play track: %r.', res)
+                    logger.exception(e)
+                    return app.frame.on_error('Failed to play track: %s' % e)
             sound.queue.clear()
             for index in range(res.index + 1, self.results.Count):
                 sound.queue.append(self.results.GetClientData(index))
