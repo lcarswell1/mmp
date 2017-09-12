@@ -122,27 +122,27 @@ class LeftPanel(wx.Panel):
             logger.debug('Hiding panel %r.', old)
             old.Hide()
 
-    def set_position(self, percentage):
-        """Seek to a percentage of the overall length of the track."""
+    def set_position(self, value, relative=False):
+        """Seek to value. If relative evaluates to True values such as -5 or 10
+        are allowed. Otherwise a percentage is expected."""
         if sound.new_stream is None:
             return self.position.SetValue(0)
         elif isinstance(self.FindFocus(), wx.TextCtrl):
             return wx.Bell()
         stream = sound.new_stream.stream
         length = stream.get_length() - 1
-        actual_value = min(length, int(length / 100 * percentage))
-        logger.info('Setting position: %d%% (%d).', percentage, actual_value)
+        if relative:
+            # Create a percentage:
+            value = max(0, min(100, (100 / length * stream.position) + value))
+        actual_value = min(length, int(length / 100 * value))
+        logger.info('Setting position: %d%% (%d).', value, actual_value)
         stream.position = actual_value
-        self.position.SetValue(percentage)
+        self.position.SetValue(value)
 
     def rewind(self, event):
         """Rewind a little bit."""
-        self.set_position(
-            self.position.GetValue() - config.sound['move_amount']
-        )
+        self.set_position(-1, relative=True)
 
     def fastforward(self, event):
         """Fast forward a little bit."""
-        self.set_position(
-            self.position.GetValue() + config.sound['move_amount']
-        )
+        self.set_position(1, relative=True)
