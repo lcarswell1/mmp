@@ -41,6 +41,7 @@ class Config(Section):
             0, title='The time to spend crossfading between songs',
             validator=Integer(min=0)
         )
+        move_amount = Option(10000, title='Move &Amount', validator=Integer)
         volume_base = Option(
             10.0, title='&Volume Logarithm Base',             validator=Float(
                 min=1.00001, max=100.0
@@ -49,7 +50,9 @@ class Config(Section):
         volume_adjust = Option(
             2, title='Volume &Sensativity', validator=Integer(min=1, max=100)
         )
-        option_order = [crossfade_amount, volume_base, volume_adjust]
+        option_order = [
+            crossfade_amount, move_amount, volume_base, volume_adjust
+        ]
 
     class backends (Section):
         title = 'Backends'

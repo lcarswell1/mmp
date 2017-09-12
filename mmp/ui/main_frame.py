@@ -53,7 +53,16 @@ class MainFrame(wx.Frame):
         add_hotkey(wx.WXK_RETURN, self.on_activate)
         add_hotkey(wx.WXK_MENU, self.on_context)
         add_hotkey(
-            wx.WXK_F10, self.on_context, modifiers=wx.ACCEL_SHIFT)
+            wx.WXK_F10, self.on_context, modifiers=wx.ACCEL_SHIFT
+        )
+        add_hotkey(
+            wx.WXK_RIGHT, self.left_panel.fastforward,
+            modifiers=wx.ACCEL_SHIFT, section_id=section_media
+        )
+        add_hotkey(
+            wx.WXK_LEFT, self.left_panel.rewind, modifiers=wx.ACCEL_SHIFT,
+            section_id=section_media
+        )
         self.tree = self.left_panel.tree  # Shorthand.
         self.right_panel = RightPanel(self.splitter)
         self.splitter.SplitHorizontally(self.left_panel, self.right_panel)
@@ -226,6 +235,7 @@ class MainFrame(wx.Frame):
             )
         ) * 100
         config.sound['volume'] = value
+        self.left_panel.volume.SetValue(value)
         sound.output.set_volume(v)
 
     def volume_up(self, event):

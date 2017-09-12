@@ -41,10 +41,21 @@ class LeftPanel(wx.Panel):
             )
         )
         s.Add(bs, 0, wx.GROW)
-        ss = wx.BoxSizer(wx.HORIZONTAL)  # Status sizer.
-        ss.Add(wx.StaticText(self, label='&Status'), 0, wx.GROW)
-        self.status = wx.TextCtrl(self, style=wx.TE_READONLY)
-        ss.Add(self.status, 1, wx.GROW)
+        ss = wx.GridSizer(2, 0, 0)  # Status sizer.
+        ss.Add(wx.StaticText(self, label='Track &Position'), 0, wx.GROW)
+        self.position = wx.Slider(self, style=wx.SL_HORIZONTAL)
+        self.position.Bind(
+            wx.EVT_SLIDER,
+            lambda event: self.set_position(event.EventObject.GetValue())
+        )
+        ss.Add(self.position, 1, wx.GROW)
+        ss.Add(wx.StaticText(self, label='&Volume'), 0, wx.GROW)
+        self.volume = wx.Slider(self, style=wx.SL_LEFT)
+        self.volume.Bind(
+            wx.EVT_SLIDER,
+            lambda event: app.frame.set_volume(event.EventObject.GetValue())
+        )
+        ss.Add(self.volume, 1, wx.GROW)
         s.Add(ss, 0, wx.GROW)
         self.SetSizerAndFit(s)
 
@@ -110,3 +121,28 @@ class LeftPanel(wx.Panel):
         else:
             logger.debug('Hiding panel %r.', old)
             old.Hide()
+
+    def set_position(self, percentage):
+        """Seek to a percentage of the overall length of the track."""
+        if sound.new_stream is None:
+            return self.position.SetValue(0)
+        elif isinstance(self.FindFocus(), wx.TextCtrl):
+            return wx.Bell()
+        stream = sound.new_stream.stream
+        length = stream.get_length() - 1
+        actual_value = min(length, int(length / 100 * percentage))
+        logger.info('Setting position: %d%% (%d).', percentage, actual_value)
+        stream.position = actual_value
+        self.position.SetValue(percentage)
+
+    def rewind(self, event):
+        """Rewind a little bit."""
+        self.set_position(
+            self.position.GetValue() - config.sound['move_amount']
+        )
+
+    def fastforward(self, event):
+        """Fast forward a little bit."""
+        self.set_position(
+            self.position.GetValue() + config.sound['move_amount']
+        )
