@@ -108,7 +108,6 @@ class MainFrame(wx.Frame):
     def on_show(self, event):
         """Populate the tree."""
         event.Skip()
-        self.set_volume(config.sound['volume'])
         self.root = self.tree.AddRoot(name)
         self.backends_root = self.tree.AppendItem(self.root, 'Backends')
         self.hotkeys_root = self.tree.AppendItem(self.root, 'Hotkeys')
@@ -119,6 +118,7 @@ class MainFrame(wx.Frame):
         self.tree.ExpandAll()
         self.tree.Collapse(self.config_root)
         config.load()
+        self.set_volume(config.sound['volume'])
         with session() as s:
             # Clear out inactive hotkeys.
             s.query(Hotkey).filter_by(active=False).delete()
