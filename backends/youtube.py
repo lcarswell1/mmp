@@ -8,13 +8,19 @@ Massive thanks to the poster!
 """
 
 import logging
+import os.path
 from urllib.parse import quote
+from pytube import YouTube
+from sound_lib.stream import FileStream
 from attr import attrs, attrib, Factory
 from requests import get
 from bs4 import BeautifulSoup
 from mmp.tracks import Track
+from mmp.app import media_dir
 
 logger = logging.getLogger(__name__)
+video_dir = os.path.join(media_dir, __name__)
+extension = 'mp4'
 
 name = 'Youtube'
 description = 'An audio-only Youtube interface.'
@@ -29,6 +35,19 @@ class YoutubeTrack(Track):
     """Add a URL attribute."""
 
     url = attrib(default=Factory(lambda: None))
+
+    def get_stream(self):
+        """Return a filestream representing this object."""
+        y = YouTube(self.url)
+        path = os.path.join(video_dir, '%s.%s' % (y.filename, extension))
+        if not os.path.isdir(video_dir):
+            os.makedirs(video_dir)
+        if not os.path.isfile(path):
+            v = y.filter(extension=extension)[-1]
+            v.download(video_dir)
+        return FileStream(
+            file=path
+        )
 
 
 def on_search(value):

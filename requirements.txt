@@ -9,6 +9,7 @@ attrs
 sqlalchemy
 attrs-sqlalchemy
 beautifulsoup4
+pytube
 hg+http://hg.q-continuum.net/platform_utils
 hg+http://hg.q-continuum.net/libloader
 hg+http://hg.q-continuum.net/sound_lib
