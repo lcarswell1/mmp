@@ -89,7 +89,13 @@ class Config(Section):
         volume_adjust = Option(
             2, title='Volume &Sensativity', validator=Integer(min=1, max=100)
         )
-        option_order = [crossfade_amount, volume_base, volume_adjust]
+        previous_threshold = Option(
+            500000, title='&How far into a track the previous command jumps '
+            'back to the beginning', validator=Integer
+        )
+        option_order = [
+            crossfade_amount, volume_base, volume_adjust, previous_threshold
+        ]
 
     class backends (Section):
         title = 'Backends'

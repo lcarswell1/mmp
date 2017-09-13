@@ -63,6 +63,13 @@ class LeftPanel(wx.Panel):
         """Play the previous track."""
         if isinstance(self.FindFocus(), wx.TextCtrl):
             return event.Skip()
+        if sound.new_stream is not None:
+            stream = sound.new_stream.stream
+            if stream.position >= config.sound['previous_threshold']:
+                stream.position = 0
+                if not stream.is_playing:
+                    stream.play()
+                return
         if sound.played:
             track = sound.played.pop()
         else:
