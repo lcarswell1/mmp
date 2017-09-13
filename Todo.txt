@@ -7,11 +7,11 @@ From Matt J:
 
 Chris Norman:
 Backends:
-- Youtube
+* Youtube
 . Soundcloud
 . Spotify
 - Google.
 
 Frameworks:
 * Jobs.
-- File storage.
+* File storage.

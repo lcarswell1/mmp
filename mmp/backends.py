@@ -117,6 +117,21 @@ class Backend:
                 f = File(path=path)
             f.downloaded = datetime.utcnow()
             s.add(f)
+            c = s.query(File).count()
+            if c > config.files['max_files']:
+                l = c - config.files['max_files']
+                logger.info(
+                    'Deleting %d old %s.', l, 'file' if l == 1 else 'files'
+                )
+                for old in s.query(File).order_by(File.downloaded).limit(l):
+                    logger.info('Deleting file %r.', old)
+                    if os.path.exists(old.path):
+                        try:
+                            os.remove(old.path)
+                        except OSError as e:
+                            logger.warning('Unable to delete %s:', old.path)
+                            logger.exception(e)
+                    s.delete(old)
             return f.id
 
     def get_download_state(self, name):
@@ -150,6 +165,7 @@ class Backend:
                 f.downloaded = None
                 s.add(f)
                 s.commit()
+                logger.info('Downloading %s to %s.', url, f.path)
                 r = get(url, **kwargs)
                 if not r.ok:
                     raise DownloadFailedError(r.status_code)

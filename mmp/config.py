@@ -97,6 +97,14 @@ class Config(Section):
             crossfade_amount, volume_base, volume_adjust, previous_threshold
         ]
 
+    class files(Section):
+        """File management."""
+
+        title = 'Files'
+        max_files = Option(100, title='Files to &Keep', validator=Integer)
+
+        option_order = [max_files]
+
     class backends (Section):
         title = 'Backends'
 
