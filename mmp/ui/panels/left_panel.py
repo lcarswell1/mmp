@@ -66,7 +66,9 @@ class LeftPanel(wx.Panel):
         if sound.played:
             track = sound.played.pop()
         else:
-            wx.Bell()
+            return wx.Bell()
+        if sound.new_stream is not None:
+            sound.queue.insert(0, sound.new_stream.track)
         sound.play(track, mark_played=False)
 
     def on_play_pause(self, event):
