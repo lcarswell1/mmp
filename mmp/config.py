@@ -26,7 +26,14 @@ class TrackFormatOption(Option):
 class TitleFormatOption(Option):
     def set(self, value):
         super(TitleFormatOption, self).set(value)
-        app.title_template = app.environment.from_string(value)
+        try:
+            app.title_template = app.environment.from_string(value)
+        except TemplateError as e:
+            logger.warning(
+                'Template error:\nOption: %r\nFormat: %r', self, value
+            )
+            logger.exception(e)
+            self.set(self.default)
 
 
 class Config(Section):
@@ -40,12 +47,13 @@ class Config(Section):
         title = 'Interface'
 
         track_format = TrackFormatOption(
-            '{% if artist is defined %}{{ artist }} - {% endif %}'
-            '{% if album is defined %}{{ album }} - {% endif %}'
-            '{% if number is defined %}{{ number }} - {% endif %}'
-            '{{ title}} '
-            '{% if duration is defined %}({{ duration | format_timedelta }}) '
-            '{% endif %}*{{ backend.name }}*',
+            '{% if artist %}{{ artist }} - {% endif %}'
+            '{% if album %}{{ album }} - {% endif %}'
+            '{% if number %}{{ number }} - {% endif %}'
+            '{{ title}}'
+            '{% if duration %} ({{ duration | format_timedelta }}){% endif %}'
+            '{% if genre %} [{{ genre }}]{% endif %}'
+            ' *{{ backend.name }}*',
             title='&Result Format'
         )
         title_format = TitleFormatOption(

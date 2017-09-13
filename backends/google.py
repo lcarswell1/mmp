@@ -404,8 +404,7 @@ class GoogleAlbum(GoogleTrackBase):
         return cls(
             data.get('artist', data.get('albumArtist', 'Unknown Artist')),
             data.get('name', 'Unknown Album'),
-            0,
-            '%s (%s)' % (data['name'], data['year']),
+            None, '%s (%s)' % (data['name'], data['year']),
             id=data['albumId']
         )
 
