@@ -73,13 +73,15 @@ def play_manager():
 add_job('Play Manager', play_manager)
 
 
-def play(track):
-    """Play a track."""
+def play(track, mark_played=True):
+    """Play a track. If mark_played evaluates to False the old track (if any)
+    will not be added to the played list."""
     global new_stream
     logger.info('Playing %r.', track)
     if new_stream is not None:
-        played.append(old_stream)
-        logger.info('Played: %r.', old_stream)
+        if mark_played:
+            played.append(new_stream.track)
+            logger.info('Played: %r.', old_stream)
         if new_stream.stream.is_playing:
             new_stream.stream.pause()
     stream = track.get_stream()

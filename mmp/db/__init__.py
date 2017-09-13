@@ -4,6 +4,7 @@ from .base import Base
 from .session import Session, session
 from .hotkeys import Section, Hotkey
 from .proxy import DBProxy
+from .files import File
 
 Base.metadata.create_all()
 
@@ -12,5 +13,5 @@ with session() as s:
     s.query(Hotkey).update({'active': False})
 
 __all__ = [
-    'Base', 'Session', 'session', 'Hotkey', 'Section', 'DBProxy'
+    'Base', 'Session', 'session', 'Hotkey', 'Section', 'DBProxy', 'File'
 ]

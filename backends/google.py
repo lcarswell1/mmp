@@ -8,14 +8,14 @@ from time import time
 from datetime import timedelta
 import wx
 from wx.lib.sized_controls import SizedPanel
-from sound_lib.stream import URLStream
+from sound_lib.stream import URLStream, FileStream
 from attr import attrs, attrib, Factory
 from gmusicapi import Mobileclient
 from simpleconf import Section, Option
 from mmp.tracks import Track
 from mmp.app import media_dir
 from mmp.jobs import add_job
-from mmp.backends import Backend
+from mmp.backends import Backend, DownloadStates
 from mmp.ui.panels.backend_panel import BackendPanel
 from mmp.hotkeys import add_hotkey, add_section
 
@@ -363,9 +363,18 @@ class GoogleTrack(GoogleTrackBase):
     def get_stream(self):
         """Check this track has been downloaded first."""
         assert self.id is not None
-        return URLStream(
-            api.get_stream_url(self.id).encode()
-        )
+        name = '%s.mp3' % self.id
+        state = backend.get_download_state(name)
+        if state is DownloadStates.downloaded:
+            return FileStream(file=backend.get_full_path(name))
+        else:
+            url = api.get_stream_url(self.id)
+            if state is DownloadStates.none:
+                add_job(
+                    'Download track %r' % self,
+                    lambda: backend.download_file(url, name)
+                )
+            return URLStream(url.encode())
 
     @classmethod
     def from_dict(cls, data):

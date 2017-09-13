@@ -1,15 +1,42 @@
 """Provides the Backend class, as well as the make_backend function."""
 
 import logging
-import wx
+import os
+import os.path
+from enum import Enum
+from datetime import datetime
+from requests import get
 from attr import attrs, attrib, Factory
 from simpleconf import Section
 from . import app
 from .jobs import add_job
 from .ui.panels.backend_panel import BackendPanel
 from .config import config
+from .db import session, File
 
 logger = logging.getLogger(__name__)
+
+
+class DownloadStates(Enum):
+    none = 0
+    downloading = 1
+    downloaded = 2
+
+
+class DownloadError(Exception):
+    """Download error."""
+
+
+class AlreadyDownloadingError(DownloadError):
+    """This file is already downloading."""
+
+
+class DownloadFailedError(DownloadError):
+    """The download failed."""
+
+    def __init__(self, code, *args, **kwargs):
+        self.code = code
+        super(DownloadFailedError, self).__init__(*args, **kwargs)
 
 
 class BackendError(Exception):
@@ -45,18 +72,6 @@ class Backend:
         self.panel.Hide()
         if self.loop_func is not None:
             add_job(self.name, self.loop)
-            self.thread.start()
-
-    def loop(self):
-        """Start this backend's loop."""
-        while app.running:
-            try:
-                self.loop_func(self)
-            except Exception as e:
-                logger.error('Error in loop: %r.', self)
-                logger.exception(e)
-                wx.CallAfter(app.frame.on_error, e)
-                break
 
     @classmethod
     def from_module(cls, frame, module):
@@ -79,3 +94,71 @@ class Backend:
             raise BackendError(
                 'The backend loaded from %r has no name.' % module
             )
+
+    def get_download_path(self):
+        """Returns the path which should be used for file storage by this
+        backend."""
+        p = os.path.join(app.media_dir, self.short_name)
+        if not os.path.isdir(p):
+            os.makedirs(p)
+        return p
+
+    def get_full_path(self, name):
+        """Get the full path name to the file named name."""
+        return os.path.join(self.get_download_path(), name)
+
+    def register_file(self, path):
+        """Register a file as present on the system."""
+        with session() as s:
+            q = s.query(File).filter_by(path=path)
+            if q.count():
+                f = q.first()
+            else:
+                f = File(path=path)
+            f.downloaded = datetime.utcnow()
+            s.add(f)
+            return f.id
+
+    def get_download_state(self, name):
+        """Get the state of a file. The value returned will be one of the
+        members of DownloadStates."""
+        with session() as s:
+            q = s.query(File).filter_by(
+                path=os.path.join(self.get_download_path(), name)
+            ).first()
+            if q is None:
+                return DownloadStates.none
+            elif q.downloaded is None:
+                return DownloadStates.downloading
+            else:
+                return DownloadStates.downloaded
+
+    def download_file(self, url, name, overwrite=False, **kwargs):
+        """Download the given URL to the specified filename and register the
+        file. This method will block. If overwrite evaluates to True and the
+        path already exists, this method does nothing except return the full
+        path. Otherwise the file is overwritten if necessary before the path is
+        returned. All extra kwargs are passed onto requests.get."""
+        path = self.get_full_path(name)
+        if not os.path.isfile(path) or overwrite:
+            if self.get_download_state(name) is DownloadStates.downloading:
+                raise AlreadyDownloadingError()
+            with session() as s:
+                f = s.query(File).filter_by(path=path).first()
+                if f is None:
+                    f = File(path=path)
+                f.downloaded = None
+                s.add(f)
+                s.commit()
+                r = get(url, **kwargs)
+                if not r.ok:
+                    raise DownloadFailedError(r.status_code)
+                if r.content.__class__ is bytes:
+                    flags = 'wb'
+                else:
+                    flags = 'w'
+                with open(path, flags) as fp:
+                    fp.write(r.content)
+                f.downloaded = datetime.now()
+                s.add(f)
+        return path

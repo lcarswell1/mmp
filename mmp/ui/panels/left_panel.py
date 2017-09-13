@@ -63,7 +63,11 @@ class LeftPanel(wx.Panel):
         """Play the previous track."""
         if isinstance(self.FindFocus(), wx.TextCtrl):
             return event.Skip()
-        wx.Bell()
+        if sound.played:
+            track = sound.played.pop()
+        else:
+            wx.Bell()
+        sound.play(track, mark_played=False)
 
     def on_play_pause(self, event):
         """Play or pause the current track."""
@@ -82,7 +86,11 @@ class LeftPanel(wx.Panel):
         """Play the next track."""
         if isinstance(self.FindFocus(), wx.TextCtrl):
             return event.Skip()
-        wx.Bell()
+        if sound.queue:
+            track = sound.queue.pop(0)
+        else:
+            return wx.Bell()
+        sound.play(track)
 
     def on_tree_change(self, event):
         """The tree view has changed selection."""
