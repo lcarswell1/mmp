@@ -33,24 +33,20 @@ def update_ui():
     """Update user interface components."""
     global zeroed
     if not new_stream:
-        state = None
         if not zeroed:
             zeroed = True
             app.frame.left_panel.position.SetValue(0)
     else:
         stream = new_stream.stream
-        if stream.is_playing:
-            state = 'Playing'
-        elif stream.is_paused:
-            state = 'Paused'
-        elif stream.is_stopped:
-            state = 'Stopped'
         app.frame.left_panel.position.SetValue(
             100 / stream.get_length() * stream.position
         )
-    title = app.name
-    if state is not None:
-        title = '%s [%s]' % (title, state)
+    if app.title_template is None:
+        title = app.name
+    else:
+        title = app.title_template.render(
+            playing=new_stream, app_name=app.name
+        )
     app.frame.SetTitle(title)
 
 

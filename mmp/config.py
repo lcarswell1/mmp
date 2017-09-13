@@ -1,15 +1,32 @@
 """Provides the main program configuration."""
 
 import os.path
+import logging
+from jinja2.exceptions import TemplateError
 from simpleconf import Section, Option
 from simpleconf.validators import Integer, Float
 from . import app
+
+logger = logging.getLogger(__name__)
 
 
 class TrackFormatOption(Option):
     def set(self, value):
         super(TrackFormatOption, self).set(value)
-        app.frame.track_format_template = app.environment.from_string(value)
+        try:
+            app.track_format_template = app.environment.from_string(value)
+        except TemplateError as e:
+            logger.warning(
+                'Template error:\nOption: %r\nFormat: %r', self, value
+            )
+            logger.exception(e)
+            self.set(self.default)
+
+
+class TitleFormatOption(Option):
+    def set(self, value):
+        super(TitleFormatOption, self).set(value)
+        app.title_template = app.environment.from_string(value)
 
 
 class Config(Section):
@@ -23,15 +40,30 @@ class Config(Section):
         title = 'Interface'
 
         track_format = TrackFormatOption(
-            '{{ artist }} - '
-            '{{ album }} - '
-            '{{ number }} - '
+            '{% if artist is defined %}{{ artist }} - {% endif %}'
+            '{% if album is defined %}{{ album }} - {% endif %}'
+            '{% if number is defined %}{{ number }} - {% endif %}'
             '{{ title}} '
             '{% if duration is defined %}({{ duration | format_timedelta }}) '
             '{% endif %}*{{ backend.name }}*',
             title='&Result Format'
         )
+        title_format = TitleFormatOption(
+            '{{ app_name }} - '
+            '{% if playing is not none %}'
+            '{{ playing.track.title }} ['
+            '{% with stream = playing.stream%}'
+            '{% if stream.is_playing %}Playing'
+            '{% elif stream.is_paused %}Paused'
+            '{% elif stream.is_stopped %}Stopped'
+            '{% else %}Unknown State'
+            '{% endif %}'
+            '{% endwith %}'
+            '{% else %}[Nothing Playing'
+            '{% endif %}]', title='The format for the window title'
+        )
         last_backend = Option('', title='The last &Backend to be viewed')
+        option_order = (track_format, title_format)
 
     class sound(Section):
         title = 'Sound'

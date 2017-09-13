@@ -7,6 +7,8 @@ running = True  # Set to False when we close.
 app = wx.App(False)
 
 frame = None  # The main frame.
+track_format_template = None
+title_template = None
 
 name = 'MMP'
 version = '0.1Pre'

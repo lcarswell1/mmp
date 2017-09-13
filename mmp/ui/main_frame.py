@@ -25,7 +25,6 @@ class MainFrame(wx.Frame):
     def __init__(self, *args, **kwargs):
         """Initialise the frame."""
         super(MainFrame, self).__init__(*args, **kwargs)
-        self.track_format_template = None  # Set by config.
         s = wx.BoxSizer(wx.VERTICAL)
         self.splitter = wx.SplitterWindow(self)
         self.left_panel = LeftPanel(self.splitter)

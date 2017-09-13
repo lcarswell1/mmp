@@ -76,7 +76,7 @@ class BackendPanel(SizedPanel):
         if backend is None:
             backend = self.backend
         try:
-            return app.frame.track_format_template.render(
+            return app.track_format_template.render(
                 **asdict(track), backend=backend
             )
         except Exception as e:
