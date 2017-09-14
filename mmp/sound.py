@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 last_run = 0
 run_every = 0.1
 zeroed = False
+title = None  # Old frame title.
 
 
 @attrs
@@ -31,7 +32,7 @@ new_stream = None
 
 def update_ui():
     """Update user interface components."""
-    global zeroed
+    global zeroed, title
     if not new_stream:
         if not zeroed:
             zeroed = True
@@ -41,12 +42,11 @@ def update_ui():
         app.frame.left_panel.position.SetValue(
             100 / stream.get_length() * stream.position
         )
-    if app.title_template is None:
-        title = app.name
-    else:
-        title = app.title_template.render(
-            playing=new_stream, app_name=app.name
-        )
+    new_title = app.title_template.render(
+        playing=new_stream, app_name=app.name
+    )
+    if new_title != title:
+        title = new_title
     app.frame.SetTitle(title)
 
 
