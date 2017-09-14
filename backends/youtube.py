@@ -10,6 +10,8 @@ Massive thanks to the poster!
 import logging
 import os.path
 from urllib.parse import quote
+import wx
+from pyperclip import copy
 from pytube import YouTube
 from sound_lib.stream import FileStream
 from attr import attrs, attrib, Factory
@@ -47,6 +49,24 @@ class YoutubeTrack(Track):
         return FileStream(
             file=path
         )
+
+
+def copy_url(event):
+    """Copy the URL of the current track."""
+    res = backend.panel.get_result()
+    if res is None:
+        return wx.Bell()
+    copy(res.url)
+
+
+def on_init(backend):
+    """Add a copy item to the menu."""
+    backend.panel.Bind(
+        wx.EVT_MENU, copy_url,
+        backend.panel.menu.Append(
+            wx.ID_ANY, '&Copy URL', 'Copy the URL of the current video.'
+        )
+    )
 
 
 def on_search(value):
