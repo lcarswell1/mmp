@@ -9,6 +9,13 @@ from mmp.ui.main_frame import MainFrame
 from mmp.config import config
 from mmp.db import session, Hotkey, Section
 
+parser.set_defaults(
+    log_file=os.path.join(
+        app.data_dir, '%s.log' % app.name
+    ),
+    log_format='%(name)s.%(levelname)s: %(message)s'
+)
+
 parser.add_argument(
     '-c',
     '--clear-db',
