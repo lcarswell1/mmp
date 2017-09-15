@@ -21,11 +21,8 @@ from mmp.hotkeys import add_hotkey, add_section
 
 logger = logging.getLogger(__name__)
 
-data_dir = None
-downloading = []
-
-
 name = "Google Play Music"
+description = 'Play songs from Google Play Music.'
 api = Mobileclient()
 backend = None
 authenticated = False
