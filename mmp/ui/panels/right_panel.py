@@ -17,10 +17,9 @@ Backends: {% for backend in frame.backends %}
 {% else %}
 None loaded.
 {% endfor %}
-Jobs: {% for job in jobs %}
-{{ job.name }}
-{%else %}
-None running.
+Jobs:
+{% for job in jobs %}{{ job.name }}
+{%else %}None running.
 {% endfor %}"""
 
 
@@ -46,7 +45,7 @@ class RightPanel(wx.Panel):
         try:
             value = template.render(
                 app=app, python_version=version,
-                frame=self.GetParent().GetParent(), jobs=jobs.jobs
+                frame=self.GetParent().GetParent(), jobs=jobs.all_jobs()
             )
             self.info.SetValue(value)
         except RuntimeError:
