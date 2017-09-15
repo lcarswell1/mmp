@@ -8,6 +8,7 @@ Massive thanks to the poster!
 """
 
 import logging
+import webbrowser
 import os.path
 from urllib.parse import quote
 import wx
@@ -63,6 +64,18 @@ def copy_url(event):
     copy(res.url)
 
 
+class YoutubeAdvert(YoutubeTrack):
+    def __init__(self, text, url):
+        super(YoutubeAdvert, self).__init__(
+            'Youtube Advert', None, None, text, url=url
+        )
+
+    def on_activate(self):
+        """Open the URL."""
+        logger.info('Opening URL %s.', self.url)
+        webbrowser.open(self.url)
+
+
 def on_init(backend):
     """Add a copy item to the menu."""
     backend.panel.Bind(
@@ -84,9 +97,8 @@ def on_search(value):
     videos = []
     for vid in results:
         vid_url = vid['href']
-        if vid_url.startswith('http'):
-            logger.info('Skipping video %s with URL %s.', vid.text, vid_url)
-            continue
+        if not vid_url.startswith('http'):
+            vid_url = video_url.format(vid_url)
         artist = vid.parent.parent.find(attrs={'class': 'g-hovercard'})
         if artist is None:
             artist = 'Unknown Artist'
@@ -95,7 +107,7 @@ def on_search(value):
         video = YoutubeTrack(
             artist,
             None, None, vid.text,
-            url=video_url.format(vid_url)
+            url=vid_url
         )
         videos.append(video)
     return videos
