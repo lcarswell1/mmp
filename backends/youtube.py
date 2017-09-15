@@ -31,6 +31,10 @@ base_url = 'https://youtube.com/results?search_query={}'
 video_url = 'https://www.youtube.com'
 
 
+class YoutubeError(Exception):
+    pass
+
+
 @attrs
 class YoutubeTrack(Track):
     """Add a URL attribute."""
@@ -43,6 +47,10 @@ class YoutubeTrack(Track):
             y = YouTube(self.url)
         except Exception as e:
             logger.critical('Failed to get a Youtube object from %r.', self)
+            if isinstance(e, AttributeError):
+                raise YoutubeError(
+                    'Unable to play. Opening in your default web browser.'
+                )
             raise e
         v = y.filter(extension=extension)[-1]
         name = '%s.%s' % (v.filename, extension)
