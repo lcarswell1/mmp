@@ -1,5 +1,6 @@
 """Provides the RightPanel class."""
 
+import webbrowser
 from sys import version
 import wx
 from ... import app
@@ -28,6 +29,14 @@ class RightPanel(wx.Panel):
         s.Add(wx.StaticText(self, label='&Information'), 0, wx.GROW)
         self.info = wx.TextCtrl(self, style=wx.TE_READONLY | wx.TE_MULTILINE)
         s.Add(self.info, 1, wx.GROW)
+        self.new_issue = wx.Button(self, label='&Report A Problem')
+        self.new_issue.Bind(
+            wx.EVT_BUTTON,
+            lambda event: webbrowser.open(
+                'https://github.com/chrisnorman7/mmp/issues/new'
+            )
+        )
+        s.Add(self.new_issue, 0, wx.GROW)
         self.SetSizerAndFit(s)
         self.Bind(wx.EVT_SHOW, self.on_show)
         self.on_show(None)
