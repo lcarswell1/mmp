@@ -159,7 +159,11 @@ class LeftPanel(wx.Panel):
                 )
         actual_value = min(length, int(length / 100 * value))
         logger.info('Setting position: %d%% (%d).', value, actual_value)
-        stream.position = actual_value
+        if actual_value < 0:
+            value = 0
+        else:
+            stream.position = actual_value
+        logger.info('Setting position slider to %d.', value)
         self.position.SetValue(value)
 
     def rewind(self, event):
