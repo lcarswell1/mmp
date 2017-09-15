@@ -8,6 +8,7 @@ Massive thanks to the poster!
 """
 
 import logging
+import webbrowser
 from urllib.parse import quote, urljoin
 import wx
 from pyperclip import copy
@@ -48,6 +49,7 @@ class YoutubeTrack(Track):
         except Exception as e:
             logger.critical('Failed to get a Youtube object from %r.', self)
             if isinstance(e, AttributeError):
+                webbrowser.open(self.url)
                 raise YoutubeError(
                     'Unable to play. Opening in your default web browser.'
                 )
@@ -119,7 +121,7 @@ def get_results_from_url(url, artist='Unknown Artist'):
     for vid in results:
         vid_url = vid['href']
         if not vid_url.startswith('http'):
-            if vid_url.startswith('/user'):
+            if vid_url.startswith('/user') or vid_url.startswith('/channel'):
                 logger.info('Adding channel %s.', vid.text)
                 videos.append(YoutubeChannel(vid.text, vid_url))
                 continue
