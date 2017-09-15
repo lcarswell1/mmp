@@ -4,7 +4,8 @@ import logging
 import six
 from sqlalchemy import and_, or_
 from .db import session, Hotkey, Section
-logger = logging.getLogger()
+
+logger = logging.getLogger(__name__)
 functions = {}
 
 # Hotkey sections.
