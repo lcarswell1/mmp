@@ -8,17 +8,17 @@ Massive thanks to the poster!
 """
 
 import logging
-import webbrowser
-import os.path
-from urllib.parse import quote
+from urllib.parse import quote, urljoin
 import wx
 from pyperclip import copy
 from pytube import YouTube
-from sound_lib.stream import FileStream
+from sound_lib.stream import FileStream, URLStream
 from attr import attrs, attrib, Factory
 from requests import get
 from bs4 import BeautifulSoup
 from mmp.tracks import Track
+from mmp.jobs import add_job
+from mmp.backends import DownloadStates
 
 logger = logging.getLogger(__name__)
 extension = 'mp4'
@@ -28,7 +28,7 @@ description = 'An audio-only Youtube interface.'
 backend = None
 
 base_url = 'https://youtube.com/results?search_query={}'
-video_url = 'https://www.youtube.com{}'
+video_url = 'https://www.youtube.com'
 
 
 @attrs
@@ -44,15 +44,33 @@ class YoutubeTrack(Track):
         except Exception as e:
             logger.critical('Failed to get a Youtube object from %r.', self)
             raise e
-        path = os.path.join(
-            backend.get_download_path(), '%s.%s' % (y.filename, extension)
+        v = y.filter(extension=extension)[-1]
+        name = '%s.%s' % (v.filename, extension)
+        state = backend.get_download_state(name)
+        if state is DownloadStates.downloaded:
+            return FileStream(file=backend.get_full_path(name))
+        else:
+            if state is DownloadStates.none:
+                add_job(
+                    'Download track %r' % self,
+                    lambda: backend.download_file(v.url, name)
+                )
+            return URLStream(v.url.encode())
+
+
+class YoutubeChannel(YoutubeTrack):
+    """A youtube user."""
+
+    def __init__(self, name, url):
+        super(YoutubeChannel, self).__init__(
+            'Youtube Channel', None, None, name,
+            url=urljoin(video_url, url, 'videos')
         )
-        if not os.path.isfile(path):
-            v = y.filter(extension=extension)[-1]
-            v.download(backend.get_download_path())
-            backend.register_file(path)
-        return FileStream(
-            file=path
+
+    def activate(self):
+        """Show channel videos."""
+        backend.panel.add_results(
+            get_results_from_url(self.url, artist=self.title)
         )
 
 
@@ -62,18 +80,6 @@ def copy_url(event):
     if res is None:
         return wx.Bell()
     copy(res.url)
-
-
-class YoutubeAdvert(YoutubeTrack):
-    def __init__(self, text, url):
-        super(YoutubeAdvert, self).__init__(
-            'Youtube Advert', None, None, text, url=url
-        )
-
-    def on_activate(self):
-        """Open the URL."""
-        logger.info('Opening URL %s.', self.url)
-        webbrowser.open(self.url)
 
 
 def on_init(backend):
@@ -87,7 +93,14 @@ def on_init(backend):
 
 
 def on_search(value):
-    r = get(base_url.format(quote(value)))
+    """Get a list of YoutubeTrack instances."""
+    return get_results_from_url(base_url.format(quote(value)))
+
+
+def get_results_from_url(url, artist='Unknown Artist'):
+    """Download url and parse videos. Youtube channels don't show an artist so
+    you can provide one with the artist arument."""
+    r = get(url)
     if not r.ok:
         raise ValueError('Error %d.' % r.status_code)  # Something went wrong.
     logger.info('URL: %s.', r.url)
@@ -98,14 +111,18 @@ def on_search(value):
     for vid in results:
         vid_url = vid['href']
         if not vid_url.startswith('http'):
-            vid_url = video_url.format(vid_url)
-        artist = vid.parent.parent.find(attrs={'class': 'g-hovercard'})
-        if artist is None:
-            artist = 'Unknown Artist'
+            if vid_url.startswith('/user'):
+                logger.info('Adding channel %s.', vid.text)
+                videos.append(YoutubeChannel(vid.text, vid_url))
+                continue
+            vid_url = urljoin(video_url, vid_url)
+        vid_artist = vid.parent.parent.find(attrs={'class': 'g-hovercard'})
+        if vid_artist is None:
+            vid_artist = artist
         else:
-            artist = artist.text
+            vid_artist = vid_artist.text
         video = YoutubeTrack(
-            artist,
+            vid_artist,
             None, None, vid.text,
             url=vid_url
         )
