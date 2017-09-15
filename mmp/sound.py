@@ -3,6 +3,7 @@
 import logging
 from time import time
 import wx
+from sound_lib.main import BassError
 from sound_lib.output import Output
 from attr import attrs, attrib
 from .jobs import add_job
@@ -30,6 +31,19 @@ old_stream = None
 new_stream = None
 
 
+def get_length_position(stream):
+    """Gets appropriate values for length and poaisiton."""
+    try:
+        l = stream.get_length()
+    except BassError:
+        l = 0
+    try:
+        p = stream.position
+    except BassError:
+        p = l
+    return (l, p)
+
+
 def update_ui():
     """Update user interface components."""
     global zeroed, title
@@ -39,9 +53,11 @@ def update_ui():
             app.frame.left_panel.position.SetValue(0)
     else:
         stream = new_stream.stream
-        app.frame.left_panel.position.SetValue(
-            100 / stream.get_length() * stream.position
-        )
+        length, position = get_length_position(stream)
+        if length:
+            app.frame.left_panel.position.SetValue(
+                100 / length * position
+            )
     new_title = app.title_template.render(
         playing=new_stream, app_name=app.name
     )
@@ -59,8 +75,10 @@ def play_manager():
         last_run = now
         wx.CallAfter(update_ui)
     if new_stream is not None:
-        if new_stream.stream.position >= new_stream.stream.get_length():
+        length, position = get_length_position(new_stream.stream)
+        if length and position and position >= length:
             # new_stream has finished. Let's get a new track from the queue.
+            logger.info('%d/%d.', position, length)
             if queue:
                 track = queue.pop(0)
                 play(track)

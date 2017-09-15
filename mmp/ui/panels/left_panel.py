@@ -143,14 +143,20 @@ class LeftPanel(wx.Panel):
         """Seek to value. If relative evaluates to True values such as -5 or 10
         are allowed. Otherwise a percentage is expected."""
         if sound.new_stream is None:
+            wx.Bell()
             return self.position.SetValue(0)
-        elif isinstance(self.FindFocus(), wx.TextCtrl):
-            return wx.Bell()
         stream = sound.new_stream.stream
-        length = stream.get_length() - 1
+        length, position = sound.get_length_position(stream)
+        length -= 1
         if relative:
             # Create a percentage:
-            value = max(0, min(100, (100 / length * stream.position) + value))
+            if length <= 0:
+                value = 0
+                actual_value = 0
+            else:
+                value = max(
+                    0, min(100, (100 / length * stream.position) + value)
+                )
         actual_value = min(length, int(length / 100 * value))
         logger.info('Setting position: %d%% (%d).', value, actual_value)
         stream.position = actual_value
@@ -158,8 +164,12 @@ class LeftPanel(wx.Panel):
 
     def rewind(self, event):
         """Rewind a little bit."""
+        if isinstance(event.EventObject, wx.TextCtrl):
+            return event.Skip()
         self.set_position(-1, relative=True)
 
     def fastforward(self, event):
         """Fast forward a little bit."""
+        if isinstance(event.EventObject, wx.TextCtrl):
+            return event.Skip()
         self.set_position(1, relative=True)

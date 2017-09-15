@@ -38,7 +38,11 @@ class YoutubeTrack(Track):
 
     def get_stream(self):
         """Return a filestream representing this object."""
-        y = YouTube(self.url)
+        try:
+            y = YouTube(self.url)
+        except Exception as e:
+            logger.critical('Failed to get a Youtube object from %r.', self)
+            raise e
         path = os.path.join(
             backend.get_download_path(), '%s.%s' % (y.filename, extension)
         )
@@ -79,6 +83,10 @@ def on_search(value):
     logger.info('Results: %d.', len(results))
     videos = []
     for vid in results:
+        vid_url = vid['href']
+        if vid_url.startswith('http'):
+            logger.info('Skipping video %s with URL %s.', vid.text, vid_url)
+            continue
         artist = vid.parent.parent.find(attrs={'class': 'g-hovercard'})
         if artist is None:
             artist = 'Unknown Artist'
@@ -87,7 +95,7 @@ def on_search(value):
         video = YoutubeTrack(
             artist,
             None, None, vid.text,
-            url=video_url.format(vid['href'])
+            url=video_url.format(vid_url)
         )
         videos.append(video)
     return videos
