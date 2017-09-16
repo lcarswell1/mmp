@@ -38,7 +38,7 @@ def run_jobs():
                 logger.exception(e)
                 wx.CallAfter(
                     app.frame.on_error,
-                    'Error with current_job %s: %s.' % (current_job.name, e)
+                    'Error with job %s: %s.' % (current_job.name, e)
                 )
                 continue
         jobs.append(current_job)
