@@ -14,7 +14,7 @@ track_format_template = None
 title_template = None
 
 name = 'MMP'
-version = '0.1Pre'
+version = '0.2Pre'
 description = 'The multitool of media players.'
 
 authors = (
