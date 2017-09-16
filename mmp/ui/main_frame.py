@@ -9,6 +9,7 @@ import backends
 from .. import app, sound
 from ..jobs import run_jobs
 from ..backends import Backend
+from .menus.menubar import MenuBar
 from .panels.left_panel import LeftPanel
 from .panels.right_panel import RightPanel
 from ..app import name
@@ -25,6 +26,7 @@ class MainFrame(wx.Frame):
     def __init__(self, *args, **kwargs):
         """Initialise the frame."""
         super(MainFrame, self).__init__(*args, **kwargs)
+        self.SetMenuBar(MenuBar(self))
         s = wx.BoxSizer(wx.VERTICAL)
         self.splitter = wx.SplitterWindow(self)
         self.left_panel = LeftPanel(self.splitter)
@@ -86,11 +88,13 @@ class MainFrame(wx.Frame):
         for subsection in section.children:
             self.add_section(subsection, section_item)
         for hotkey in section.hotkeys:
-            hotkey_item = self.tree.AppendItem(
-                section_item, functions[
-                    (hotkey.control_id, hotkey.func_name)
-                ].__doc__
-            )
+            doc = functions[
+                (hotkey.control_id, hotkey.func_name)
+            ].__doc__
+            if doc is None:
+                logger.warning('No description for %r.', hotkey)
+                raise RuntimeError('Hotkey without a description: %r' % hotkey)
+            hotkey_item = self.tree.AppendItem(section_item, doc.strip('.'))
             self.tree.SetItemData(hotkey_item, DBProxy(Hotkey, hotkey.id))
             logger.info('Added %r.', hotkey)
 
@@ -162,6 +166,8 @@ class MainFrame(wx.Frame):
 
     def on_close(self, event):
         """Set app.running to false before we close."""
+        if app.lyrics_frame is not None:
+            app.lyrics_frame.Close(True)
         app.running = False
         event.Skip()
 

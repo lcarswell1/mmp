@@ -69,7 +69,7 @@ def update_ui():
 def play_manager():
     """A job to check the status of playing streams and play the next one if
     the old one has finished."""
-    global last_run
+    global last_run, new_stream
     now = time()
     if now - last_run >= run_every:
         last_run = now
@@ -82,6 +82,8 @@ def play_manager():
             if queue:
                 track = queue.pop(0)
                 play(track)
+            else:
+                new_stream = None
 
 
 add_job('Play Manager', play_manager)
