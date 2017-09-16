@@ -7,10 +7,10 @@ from .proxy import DBProxy
 from .files import File
 
 Base.metadata.create_all()
-
 with session() as s:
     s.query(Section).delete()  # Clear sections.
     s.query(Hotkey).update({'active': False})
+
 
 __all__ = [
     'Base', 'Session', 'session', 'Hotkey', 'Section', 'DBProxy', 'File'

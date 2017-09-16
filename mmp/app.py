@@ -1,5 +1,7 @@
 """The wx app."""
 
+import os
+import os.path
 import wx
 from jinja2 import Environment
 
@@ -7,6 +9,7 @@ running = True  # Set to False when we close.
 app = wx.App(False)
 
 frame = None  # The main frame.
+lyrics_frame = None
 track_format_template = None
 title_template = None
 
@@ -24,7 +27,12 @@ paths = wx.StandardPaths.Get()
 
 data_dir = paths.GetUserDataDir()
 media_dir = paths.GetUserLocalDataDir()
-backends_dir = 'backends'
+
+for path in [data_dir, media_dir]:
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+
 environment = Environment()
 
 

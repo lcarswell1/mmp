@@ -6,6 +6,7 @@ import os.path
 from default_argparse import parser
 from mmp import app
 from mmp.ui.main_frame import MainFrame
+from mmp.ui.lyrics_frame import LyricsFrame
 from mmp.config import config
 from mmp.db import session, Hotkey, Section
 
@@ -37,6 +38,7 @@ if __name__ == '__main__':
                 logging.info('Clearing table %s.', table.__table__.name)
                 q.delete()
                 logging.info('Rows affected: %d.', n)
+    app.lyrics_frame = LyricsFrame(None)
     app.frame = MainFrame(None, title=app.name)
     app.frame.Show(True)
     app.frame.Maximize()
